@@ -1,28 +1,45 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 10, Example Set 3
 """
-# pylint: disable=wrong-import-position
 
 from functools import partial
 
-def performance():
+
+def performance() -> None:
     import timeit
-    f1 = timeit.timeit("""exp2(12)""", setup="""
-from functools import partial
-exp2 = partial(pow, 2)""")
-    print("partial", f1)
+    from textwrap import dedent
 
-    f2 = timeit.timeit("""exp2(12)""", """exp2 = lambda y: pow(2, y)""")
-    print("lambda", f2)
+    partial_time = timeit.timeit(
+        """exp2(12)""",
+        setup=dedent(
+            """
+            from functools import partial
+            exp2 = partial(pow, 2)
+        """
+        ),
+    )
 
-test_correctness = """
+    lambda_time = timeit.timeit("""exp2(12)""", setup="""exp2 = lambda y: pow(2, y)""")
+    print(f"partial {partial_time:.3f}")
+    print(f"lambda  {lambda_time:.3f}")
+
+
+REPL_correctness = """
 >>> exp2 = partial(pow, 2)
 >>> exp2(12)
 4096
 >>> exp2(17)-1
 131071
+
+>>> exp2 = partial(pow, 2)
+>>> exp2(12)
+4096
+>>> exp2(17)-1
+131071
+
+>>> exp2 = lambda y: pow(2, y)
+
 >>> exp2 = lambda y: pow(2, y)
 >>> exp2(12)
 4096
@@ -30,14 +47,7 @@ test_correctness = """
 131071
 """
 
-__test__ = {
-    "test_correctness": test_correctness,
-}
-
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}
 
 if __name__ == "__main__":
-    test()
     performance()

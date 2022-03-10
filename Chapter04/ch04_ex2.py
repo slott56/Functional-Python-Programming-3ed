@@ -1,30 +1,59 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 4, Example Set 2
 Also used in Chapter 5.
 """
-# pylint: disable=line-too-long,wrong-import-position,reimported
 
-from typing import Iterable, Tuple, Any
+REPL_all_any = """
+>>> from Chapter02.ch02_ex1 import isprimei as isprime
+>>> someset = {2, 3, 5, 7, 11, 13}
+>>> all(isprime(x) for x in someset)
+True
+>>> someset = {2, 3, 5, 7, 11, 13, 15}
+>>> all(isprime(x) for x in someset)
+False
+>>> not_p_1 = not all(isprime(x) for x in someset)
+>>> not_p_1
+True
+>>> not_p_2 = any(not isprime(x) for x in someset)
+>>> not_p_2
+True
 
-Wrapped = Tuple[Any, Tuple]
-def wrap(leg_iter: Iterable[Tuple]) -> Iterable[Wrapped]:
+>>> all(())
+True
+>>> any(())
+False
+"""
+
+
+from typing import Any, TypeVar
+from collections.abc import Iterable, Iterator
+
+Waypoint = tuple[float, float]
+Leg = tuple[Waypoint, Waypoint, float]
+
+
+def wrap(leg_iter: Iterable[Leg]) -> Iterator[tuple[float, Leg]]:
     return ((leg[2], leg) for leg in leg_iter)
 
-def unwrap(dist_leg: Tuple[Any, Any]) -> Any:
+
+T_ = TypeVar("T_")
+
+
+def unwrap(dist_leg: tuple[Any, T_]) -> T_:
     # pylint: disable=unused-variable
     distance, leg = dist_leg
     return leg
 
-def by_dist(leg: Tuple[Any, Any, Any]) -> Any:
-    # pylint: disable=unused-variable
+
+def by_dist(leg: Leg) -> float:
     lat, lon, dist = leg
     return dist
 
-test_max_alternatives = """
+
+REPL_max_alternatives = """
 >>> from Chapter04.ch04_ex1 import (
-...     float_from_pair, float_lat_lon, row_iter_kml, limits, legs,
+...     float_from_pair, float_lat_lon, row_iter_kml, legs,
 ...     haversine)
 >>> import urllib.request
 >>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
@@ -52,8 +81,16 @@ test_max_alternatives = """
 ((35.505665, -76.653664), (35.508335, -76.654999), 0.1731)
 """
 
-from typing import Iterable, Any, Callable
-def max_like(trip: Iterable[Any], key: Callable=lambda x: x) -> Any:
+from collections.abc import Iterable, Callable
+from typing import Any, Protocol
+
+
+class Sortable(Protocol):
+    def __lt__(self, other: Any) -> bool:
+        ...
+
+
+def max_like(trip: Iterable[Leg], key: Callable[[Leg], Sortable] = lambda x: x) -> Leg:
     """
     >>> max_like([1, 3, 2])
     3
@@ -62,16 +99,16 @@ def max_like(trip: Iterable[Any], key: Callable=lambda x: x) -> Any:
     return sorted(wrapped)[-1][1]
 
 
-start = lambda x: x[0]
-end = lambda x: x[1]
-dist = lambda x: x[2]
+start: Callable[[tuple[Any, ...]], Any] = lambda x: x[0]
+end: Callable[[tuple[Any, ...]], Any] = lambda x: x[1]
+dist: Callable[[tuple[Any, ...]], Any] = lambda x: x[2]
 
-lat = lambda x: x[0]
-lon = lambda x: x[1]
+lat: Callable[[tuple[Any, ...]], Any] = lambda x: x[0]
+lon: Callable[[tuple[Any, ...]], Any] = lambda x: x[1]
 
-test_min_max = """
+REPL_min_max = """
 >>> from Chapter04.ch04_ex1 import (
-...     float_from_pair, float_lat_lon, row_iter_kml, limits, legs,
+...     float_from_pair, float_lat_lon, row_iter_kml, legs,
 ...     haversine)
 >>> import urllib.request
 >>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
@@ -91,9 +128,9 @@ test_min_max = """
 
 """
 
-test_conversion = """
+REPL_conversion = """
 >>> from Chapter04.ch04_ex1 import (
-...     float_from_pair, float_lat_lon, row_iter_kml, limits, legs,
+...     float_from_pair, float_lat_lon, row_iter_kml, legs,
 ...     haversine)
 >>> import urllib.request
 >>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
@@ -116,78 +153,24 @@ test_conversion = """
 
 """
 
-test_filter_sorted = """
->>> from Chapter04.ch04_ex1 import (
-...     float_from_pair, float_lat_lon, row_iter_kml, limits, legs,
-...     haversine)
->>> import urllib.request
->>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
-...    path= float_from_pair(float_lat_lon(row_iter_kml(source)))
-...    trip= tuple( (start, end, round(haversine(start, end),4))
-...        for start,end in legs(path))
 
->>> long= list(filter( lambda leg: dist(leg) >= 50, trip ))
->>> len(long)
-14
->>> long[0]
-((34.204666, -77.800499), (33.276833, -78.979332), 81.0363)
->>> long[-1]
-((31.9105, -80.780998), (32.83248254681784, -79.93379468285697), 70.0694)
+def performance() -> None:
+    import timeit
 
->>> s1= sorted( dist(x) for x in trip)
->>> s1[0]
-0.1731
->>> s1[-1]
-129.7748
-
->>> s2=( sorted( trip, key=dist ) )
->>> s2[0]
-((35.505665, -76.653664), (35.508335, -76.654999), 0.1731)
->>> s2[-1]
-((27.154167, -80.195663), (29.195168, -81.002998), 129.7748)
-
->>> from Chapter04.ch04_ex4 import mean, stdev, z
-
->>> dist_data = list(map(dist, trip))
->>> μ_d = mean(dist_data)
->>> σ_d = stdev(dist_data)
->>> print( "Average leg", μ_d, "with σ_d of", σ_d, "Z(0)=", z(0,μ_d,σ_d) )
-Average leg 33.99131780821918 with σ_d of 24.158473730346035 Z(0)= -1.407014291864054
-
->>> outlier = lambda leg: abs(z(dist(leg),μ_d,σ_d)) > 3
->>> print( "Outliers", list( filter( outlier, trip ) ) )
-Outliers [((29.050501, -80.651169), (27.186001, -80.139503), 115.1751), ((27.154167, -80.195663), (29.195168, -81.002998), 129.7748)]
-"""
-
-def performance():
-    print(
-        "map",
-        timeit.timeit(
-            """list(map(int,data))""",
-            """data = ['2', '3', '5', '7', '11', '13', '17', '19', '23', '29', '31', '37', '41', '43', '47', '53', '59', '61', '67', '71', '73', '79', '83', '89', '97', '101', '103', '107', '109', '113', '127', '131', '137', '139', '149', '151', '157', '163', '167', '173', '179', '181', '191', '193', '197', '199', '211', '223', '227', '229']"""
-        )
+    map_time = timeit.timeit(
+        """list(map(int,data))""",
+        """data = ['2', '3', '5', '7', '11', '13', '17', '19', '23', '29', '31', '37', '41', '43', '47', '53', '59', '61', '67', '71', '73', '79', '83', '89', '97', '101', '103', '107', '109', '113', '127', '131', '137', '139', '149', '151', '157', '163', '167', '173', '179', '181', '191', '193', '197', '199', '211', '223', '227', '229']""",
     )
-    print(
-        "expr",
-        timeit.timeit(
-            """list(int(v) for v in data)""",
-            """data = ['2', '3', '5', '7', '11', '13', '17', '19', '23', '29', '31', '37', '41', '43', '47', '53', '59', '61', '67', '71', '73', '79', '83', '89', '97', '101', '103', '107', '109', '113', '127', '131', '137', '139', '149', '151', '157', '163', '167', '173', '179', '181', '191', '193', '197', '199', '211', '223', '227', '229']"""
-        )
+    print(f"map {map_time:.4f}")
+    expr_time = timeit.timeit(
+        """list(int(v) for v in data)""",
+        """data = ['2', '3', '5', '7', '11', '13', '17', '19', '23', '29', '31', '37', '41', '43', '47', '53', '59', '61', '67', '71', '73', '79', '83', '89', '97', '101', '103', '107', '109', '113', '127', '131', '137', '139', '149', '151', '157', '163', '167', '173', '179', '181', '191', '193', '197', '199', '211', '223', '227', '229']""",
     )
+    print(f"expr {expr_time:.4f}")
 
 
-__test__ = {
-    "test_max_alternatives": test_max_alternatives,
-    "test_min_max": test_min_max,
-    "test_conversion": test_conversion,
-    "test_filter_sorted": test_filter_sorted,
-}
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}
 
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
 
 if __name__ == "__main__":
-    # import timeit
-    # performance()
-    test()
+    performance()

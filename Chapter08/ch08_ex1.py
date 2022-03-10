@@ -1,20 +1,37 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 8, Example Set 1
 """
-# pylint: disable = wrong-import-position,wrong-import-order,too-few-public-methods,missing-docstring
+
+
+REPL_trip = """
+>>> from Chapter07.ch07_ex1 import get_trip
+>>> source_url = "file:./Winter%202012-2013.kml"
+>>> trip = get_trip(source_url)
+>>> trip = get_trip()
+>>> from textwrap import wrap
+>>> from pprint import pprint
+
+>>> pprint(wrap(str(trip[0])))
+['LegNT(start=PointNT(latitude=37.54901619777347,',
+ 'longitude=-76.33029518659048), end=PointNT(latitude=37.840832,',
+ 'longitude=-76.273834), distance=17.7246)']
+>>> pprint(wrap(str(trip[-1])))
+['LegNT(start=PointNT(latitude=38.330166, longitude=-76.458504),',
+ 'end=PointNT(latitude=38.976334, longitude=-76.473503),',
+ 'distance=38.8019)']
+
+"""
 
 from Chapter04.ch04_ex1 import haversine
 
-#from collections import namedtuple
-#Leg = namedtuple("Leg", ("order", "start", "end", "distance"))
-#Point = namedtuple("Point", ("latitude", "longitude"))
-
 from typing import NamedTuple
+
+
 class Point(NamedTuple):
     latitude: float
     longitude: float
+
 
 class Leg(NamedTuple):
     order: int
@@ -22,40 +39,69 @@ class Leg(NamedTuple):
     end: Point
     distance: float
 
-from typing import Tuple
-def pick_lat_lon(lon: str, lat: str, alt: str) -> Tuple[str, str]:
+
+def pick_lat_lon(lon: str, lat: str, alt: str) -> tuple[str, str]:
     return lat, lon
 
-from typing import Iterator, List
-def float_lat_lon(row_iter: Iterator[List[str]]) -> Iterator[Point]:
-    return (
-        Point(*map(float, pick_lat_lon(*row)))
-        for row in row_iter
-    )
 
-def ordered_leg_iter(
-        pair_iter: Iterator[Tuple[Point, Point]]
-    ) -> Iterator[Leg]:
+from typing import Iterator, List
+
+
+def float_lat_lon(row_iter: Iterator[List[str]]) -> Iterator[Point]:
+    return (Point(*map(float, pick_lat_lon(*row))) for row in row_iter)
+
+
+from typing import Iterator
+
+
+def ordered_leg_iter(pair_iter: Iterator[tuple[Point, Point]]) -> Iterator[Leg]:
     for order, pair in enumerate(pair_iter):
         start, end = pair
-        yield Leg(
-            order,
-            start,
-            end,
-            round(haversine(start, end), 4)
-        )
+        yield Leg(order, start, end, round(haversine(start, end), 4))
 
-test_parser = """
+
+def test_ordered_leg_iter() -> None:
+    from Chapter06.ch06_ex3 import row_iter_kml
+    from Chapter04.ch04_ex1 import legs, haversine
+    import urllib.request
+
+    source_url = "file:./Winter%202012-2013.kml"
+    with urllib.request.urlopen(source_url) as source:
+        path_iter = float_lat_lon(row_iter_kml(source))
+        pair_iter = legs(path_iter)
+        trip_iter = ordered_leg_iter(pair_iter)
+        trip = list(trip_iter)
+    assert trip[0] == Leg(
+        order=0,
+        start=Point(latitude=37.54901619777347, longitude=-76.33029518659048),
+        end=Point(latitude=37.840832, longitude=-76.273834),
+        distance=17.7246,
+    )
+    assert trip[1] == Leg(
+        order=1,
+        start=Point(latitude=37.840832, longitude=-76.273834),
+        end=Point(latitude=38.331501, longitude=-76.459503),
+        distance=30.7382,
+    )
+    assert trip[-1] == Leg(
+        order=72,
+        start=Point(latitude=38.330166, longitude=-76.458504),
+        end=Point(latitude=38.976334, longitude=-76.473503),
+        distance=38.8019,
+    )
+
+
+REPL_test_parser = """
 >>> from Chapter06.ch06_ex3 import row_iter_kml
 >>> from Chapter04.ch04_ex1 import legs, haversine
 >>> import urllib.request
 
->>> filename = "file:./Winter%202012-2013.kml"
->>> with urllib.request.urlopen(filename) as source:
-...    path_iter = float_lat_lon(row_iter_kml(source))
-...    pair_iter = legs(path_iter)
-...    trip_iter = ordered_leg_iter( pair_iter )
-...    trip = list(trip_iter)
+>>> source_url = "file:./Winter%202012-2013.kml"
+>>> with urllib.request.urlopen(source_url) as source:
+...     path_iter = float_lat_lon(row_iter_kml(source))
+...     pair_iter = legs(path_iter)
+...     trip_iter = ordered_leg_iter(pair_iter)
+...     trip = list(trip_iter)
 
 >>> len(trip)
 73
@@ -66,13 +112,25 @@ Leg(order=72, start=Point(latitude=38.330166, longitude=-76.458504), end=Point(l
 
 """
 
-__test__ = {
-    "test_parser": test_parser,
-}
+REPL_accumulate = """
+>>> from Chapter06.ch06_ex3 import row_iter_kml
+>>> from Chapter04.ch04_ex1 import legs, haversine
+>>> import urllib.request
 
-def test():
-    import doctest
-    doctest.testmod(verbose=True)
+>>> source_url = "file:./Winter%202012-2013.kml"
+>>> with urllib.request.urlopen(source_url) as source:
+...     path_iter = float_lat_lon(row_iter_kml(source))
+...     pair_iter = legs(path_iter)
+...     trip_iter = ordered_leg_iter(pair_iter)
+...     trip = list(trip_iter)
 
-if __name__ == "__main__":
-    test()
+>>> from itertools import accumulate
+
+>>> distances = (leg.distance for leg in trip)
+>>> distance_accum = list(accumulate(distances))
+>>> total = distance_accum[-1] + 1.0
+
+>>> quartiles = list(int(4 * d / total) for d in distance_accum)
+"""
+
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}

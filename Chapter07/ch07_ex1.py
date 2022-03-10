@@ -1,133 +1,249 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 7, Example Set 1
 """
-# pylint: disable=wrong-import-position,wrong-import-order,too-few-public-methods
 
-from Chapter06.ch06_ex3 import row_iter_kml
-from Chapter04.ch04_ex1 import legs, haversine
+REPL_tuples = """
+>>> some_leg = (
+...     (37.549016, -76.330295),
+...     (37.840832, -76.273834),
+...     17.7246
+... )
+>>> some_leg
+((37.549016, -76.330295), (37.840832, -76.273834), 17.7246)
 
-import urllib.request
-
-first_leg = ((29.050501, -80.651169), (27.186001, -80.139503), 115.1751)
-
-selectors = '''
->>> from typing import Tuple, Callable
->>> Point = Tuple[float, float]
->>> Leg = Tuple[Point, Point, float]
->>> start: Callable[[Leg], Point] = lambda leg: leg[0]
->>> end: Callable[[Leg], Point] = lambda leg: leg[1]
+>>> start = lambda leg: leg[0]
+>>> end = lambda leg: leg[1]
 >>> distance = lambda leg: leg[2]
+
 >>> latitude = lambda pt: pt[0]
 >>> longitude = lambda pt: pt[1]
 
->>> first_leg = ((29.050501, -80.651169), (27.186001, -80.139503), 115.1751)
->>> latitude(start(first_leg))
-29.050501
+>>> latitude(start(some_leg))
+37.549016
 
->>> start: Callable[[Leg], Point] = lambda leg: leg[0]
->>> latitude(start(first_leg))
-29.050501
+>>> start_s = lambda start, end, distance: start
+>>> end_s = lambda start, end, distance: end
+>>> distance_s = lambda start, end, distance: distance
 
-'''
+>>> latitude_s = lambda lat, lon: lat
+>>> longitude_s = lambda lat, lon: lon
 
-selectors_args = """
->>> from typing import Tuple, Callable
->>> Point = Tuple[float, float]
->>> Leg = Tuple[Point, Point, float]
->>> start: Callable[[Point, Point, float], Point] = lambda start, end, distance: start
->>> end: Callable[[Point, Point, float], Point] = lambda start, end, distance: end
->>> distance = lambda start, end, distance: distance
->>> latitude = lambda lat, lon: lat
->>> longitude = lambda lat, lon: lon
+>>> longitude_s(*start_s(*some_leg))
+-76.330295
 
->>> first_leg = ((29.050501, -80.651169), (27.186001, -80.139503), 115.1751)
->>> latitude(*start(*first_leg)) 
-29.050501
 """
 
-# from collections import namedtuple
-# Leg = namedtuple("Leg", ("start", "end", "distance"))
-# Point = namedtuple("Point", ("latitude", "longitude"))
+from collections.abc import Callable
+
+Point = tuple[float, float]
+Leg = tuple[Point, Point, float]
+
+start: Callable[[Leg], Point] = lambda leg: leg[0]
+
 
 from typing import NamedTuple
 
-class Point(NamedTuple):
+
+class PointNT(NamedTuple):
     latitude: float
     longitude: float
 
-class Leg(NamedTuple):
-    start: Point
-    end: Point
+
+class LegNT(NamedTuple):
+    start: PointNT
+    end: PointNT
     distance: float
 
-first_leg = Leg(
-    Point(29.050501, -80.651169),
-    Point(27.186001, -80.139503),
-    115.1751
-)
 
-named_tuples = """
->>> first_leg = Leg(
-...     Point(29.050501, -80.651169),
-...     Point(27.186001, -80.139503),
+REPL_named_tuples = """
+>>> first_leg = LegNT(
+...     PointNT(29.050501, -80.651169),
+...     PointNT(27.186001, -80.139503),
 ...     115.1751)
 >>> first_leg.start.latitude
 29.050501
 """
 
-from typing import Tuple, Iterator, List
+from collections.abc import Iterable, Iterator
+from Chapter04.ch04_ex1 import pick_lat_lon
 
-# pylint: disable=unused-argument
-def pick_lat_lon(lon: str, lat: str, alt: str) -> Tuple[str, str]:
-    return lat, lon
 
-def float_lat_lon(
-        row_iter: Iterator[List[str]]
-    ) -> Iterator[Point]:
+def float_lat_lon_tuple(row_iter: Iterable[list[str]]) -> Iterator[tuple[float, float]]:
+    lat_lon_iter = (pick_lat_lon(*row) for row in row_iter)
+    return ((float(lat), float(lon)) for lat, lon in lat_lon_iter)
+
+
+from collections.abc import Sequence
+
+
+def test_float_lat_lon_tuple() -> None:
+    source = [["1", "2", "alt"], ["2", "3", "alt"]]
+    actual = list(float_lat_lon_tuple(iter(source)))
+    assert actual == [(2.0, 1.0), (3.0, 2.0)]
+
+
+from Chapter04.ch04_ex1 import pick_lat_lon
+from typing import Iterable, Iterator
+
+
+def float_lat_lon(row_iter: Iterable[list[str]]) -> Iterator[PointNT]:
+    lat_lon_iter = (pick_lat_lon(*row) for row in row_iter)
     return (
-        Point(*map(float, pick_lat_lon(*row)))
-        for row in row_iter
+        PointNT(float(lat), float(lon))
+        # ------
+        for lat, lon in lat_lon_iter
     )
 
+
+from collections.abc import Sequence
+
+
+def test_float_lat_lon() -> None:
+    source = [["1", "2", "alt"], ["2", "3", "alt"]]
+    actual = list(float_lat_lon_tuple(iter(source)))
+    assert actual == [(2.0, 1.0), (3.0, 2.0)]
+
+
 import codecs
-from typing import cast, TextIO, BinaryIO
-source = "file:./Winter%202012-2013.kml"
-def get_trip(url: str = source) -> List[Leg]:
+
+from collections.abc import Iterable, Iterator
+from typing import cast, TextIO
+import urllib.request
+from Chapter04.ch04_ex1 import legs, haversine, row_iter_kml
+
+source_url = "file:./Winter%202012-2013.kml"
+
+
+def get_trip(url: str = source_url) -> list[LegNT]:
     with urllib.request.urlopen(url) as source:
-        path_iter = float_lat_lon(row_iter_kml(
-            # cast(TextIO, source)
-            cast(
-                TextIO,
-                codecs.getreader('utf-8')(cast(BinaryIO, source))
-            )
-        ))
+        path_iter = float_lat_lon(row_iter_kml(source))
         pair_iter = legs(path_iter)
         trip_iter = (
-            Leg(start, end, round(haversine(start, end), 4))
+            LegNT(start, end, round(haversine(start, end), 4))
             for start, end in pair_iter
         )
         trip = list(trip_iter)
     return trip
 
-find_given_leg_demo = """
->>> trip= get_trip()
->>> leg= next(filter(lambda leg: int(leg.distance)==115, trip))
+
+REPL_test_trip = """
+>>> source_url = "file:./Winter%202012-2013.kml"
+>>> trip = get_trip(source_url)
+
+>>> trip[0].start
+PointNT(latitude=37.54901619777347, longitude=-76.33029518659048)
+>>> trip[0].end
+PointNT(latitude=37.840832, longitude=-76.273834)
+>>> trip[0].distance
+17.7246
+"""
+
+REPL_find_given_leg_demo = """
+>>> source_url = "file:./Winter%202012-2013.kml"
+>>> trip = get_trip(source_url)
+>>> leg = next(filter(lambda leg: int(leg.distance)==115, trip))
 >>> leg.start.latitude
 29.050501
 """
 
-__test__ = {
-    'selectors': selectors,
-    'selectors_args': selectors_args,
-    'named_tuples': named_tuples,
-    'find_given_leg_demo': find_given_leg_demo,
-}
+import math
 
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
 
-if __name__ == "__main__":
-    test()
+class PointE(NamedTuple):
+    latitude: float
+    longitude: float
+
+    def distance(self, other: "PointE", R: float = 360 * 60 / math.tau) -> float:
+        """Equirectangular, 'flat-earth' distance."""
+        Δφ = math.radians(self.latitude) - math.radians(other.latitude)
+        Δλ = math.radians(self.longitude) - math.radians(other.longitude)
+        mid_φ = (math.radians(self.latitude) - math.radians(other.latitude)) / 2
+        x = R * Δλ * math.cos(mid_φ)
+        y = R * Δφ
+        return math.hypot(x, y)
+
+
+REPL_test_pointe = """
+>>> start = PointE(latitude=38.330166, longitude=-76.458504)
+>>> end = PointE(latitude=38.976334, longitude=-76.473503)
+>>> leg = LegNT(start, end, round(start.distance(end), 4))
+>>> leg.start == start
+True
+>>> leg.end == end
+True
+>>> leg.distance
+38.7805
+"""
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class PointDC:
+    latitude: float
+    longitude: float
+
+
+@dataclass(frozen=True)
+class LegDC:
+    start: PointDC
+    end: PointDC
+    distance: float
+
+
+REPL_test_dataclass = """
+>>> first_leg = LegDC(
+...     PointDC(29.050501, -80.651169),
+...     PointDC(27.186001, -80.139503),
+...     115.1751)
+>>> first_leg.start.latitude
+29.050501
+"""
+
+from typing import NamedTuple
+
+
+class EagerLeg(NamedTuple):
+    start: Point
+    end: Point
+    distance: float
+
+    @classmethod
+    def create(cls, start: Point, end: Point) -> "EagerLeg":
+        return cls(start=start, end=end, distance=round(haversine(start, end), 4))
+
+
+REPL_test_eager_leg = """
+>>> start = PointNT(29.050501, -80.651169) 
+>>> end = PointNT(27.186001, -80.139503) 
+>>> leg = EagerLeg.create(start, end)
+>>> leg.distance
+115.1751
+"""
+
+from typing import NamedTuple
+
+
+class LazyLeg(NamedTuple):
+    start: Point
+    end: Point
+
+    @property
+    def distance(self) -> float:
+        return round(haversine(self.start, self.end), 4)
+
+    @classmethod
+    def create(cls, start: Point, end: Point) -> "LazyLeg":
+        return cls(start=start, end=end)
+
+
+REPL_test_lazy_leg = """
+>>> start = PointNT(29.050501, -80.651169) 
+>>> end = PointNT(27.186001, -80.139503) 
+>>> leg = LazyLeg.create(start, end)
+>>> leg.distance
+115.1751
+"""
+
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}

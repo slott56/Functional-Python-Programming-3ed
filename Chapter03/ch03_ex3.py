@@ -1,244 +1,167 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 3, Example Set 3
 """
 
-from typing import TextIO, Tuple, List, Iterator, TypeVar, Any, Iterable, Sequence
+import math
 
-def strip_head(source: TextIO, line: str) -> Tuple[TextIO, str]:
-    """Purely recursive strip headings until a blank line.
+from collections.abc import Iterator
 
-    >>> import io
-    >>> data = io.StringIO( "heading\\n\\nbody\\nmore\\n" )
-    >>> tail, first = strip_head(data, data.readline())
-    >>> first
-    'body\\n'
-    >>> list(tail)
-    ['more\\n']
 
-    """
-    if len(line.strip()) == 0:
-        return source, source.readline()
-    return strip_head(source, source.readline())
-
-def get_columns(source: TextIO, line: str) -> Iterator[str]:
-    """When reading 1000.txt, parse columns and exclude the trailing line.
-
-    >>> import io
-    >>> data = io.StringIO( "body\\nmore\\nend.\\n" )
-    >>> list( get_columns(data, data.readline() ) )
-    ['body\\n', 'more\\n']
-    """
-    if line.strip() == "end.":
+def pfactorsl(x: int) -> Iterator[int]:
+    if x % 2 == 0:
+        yield 2
+        if x // 2 > 1:
+            yield from pfactorsl(x // 2)
         return
-    yield line
-    yield from get_columns(source, source.readline())
+    for i in range(3, int(math.sqrt(x) + 0.5) + 1, 2):
+        if x % i == 0:
+            yield i
+            if x // i > 1:
+                yield from pfactorsl(x // i)
+            return
+    yield x
 
-    #Older code...
-    #for data in get_columns( source, source.readline() ):
-    #    yield data
 
-def parse_i(source: TextIO) -> Iterator[int]:
-    """Imperative parsing.
+def test_pfactorsl() -> None:
+    assert list(pfactorsl(1560)) == [2, 2, 2, 3, 5, 13]
+    assert list(pfactorsl(2)) == [2]
+    assert list(pfactorsl(3)) == [3]
 
-    >>> import io
-    >>> data = io.StringIO('''\\
-    ...                         The First 1,000 Primes
-    ...                          (the 1,000th is 7919)
-    ...         For more information on primes see http://primes.utm.edu/
-    ...
-    ...      2      3      5      7     11     13     17     19     23     29
-    ...   7841   7853   7867   7873   7877   7879   7883   7901   7907   7919
-    ... end.
-    ... ''')
-    >>> list( parse_i(data))
-    [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 7841, 7853, 7867, 7873, 7877, 7879, 7883, 7901, 7907, 7919]
-    """
-    for c in get_columns(*strip_head(source, source.readline())):
-        for number_text in c.split():
-            yield int(number_text)
 
-def parse_g(source: TextIO) -> Iterator[int]:
-    """Generator function parsing.
+REPL_test_pfactorsl_1 = """
+>>> pfactorsl(1560)
+<generator object pfactorsl at ...>
 
-    >>> import io
-    >>> data = io.StringIO('''\\
-    ...                         The First 1,000 Primes
-    ...                          (the 1,000th is 7919)
-    ...         For more information on primes see http://primes.utm.edu/
-    ...
-    ...      2      3      5      7     11     13     17     19     23     29
-    ...   7841   7853   7867   7873   7877   7879   7883   7901   7907   7919
-    ... end.
-    ... ''')
-    >>> list( parse_g(data))
-    [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 7841, 7853, 7867, 7873, 7877, 7879, 7883, 7901, 7907, 7919]
-    """
-    return (
-        int(number_text)
-        for c in get_columns(*strip_head(source, source.readline()))
-        for number_text in c.split()
-    )
+>>> list(pfactorsl(1560))
+[2, 2, 2, 3, 5, 13]
 
-def flatten(data: Iterable[Iterable[Any]]) -> Iterable[Any]:
-    for line in data:
-        for x in line:
+>>> len(pfactorsl(1560))
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: object of type 'generator' has no len()
+"""
+
+REPL_test_pfactorsl_2 = """
+>>> result = pfactorsl(1560)
+>>> sum(result)
+27
+
+>>> sum(result)
+0
+"""
+
+from collections.abc import Iterator
+
+
+def pfactorsr(x: int) -> Iterator[int]:
+    """Pure Recursion factors. Limited to numbers below about 4,000,000"""
+
+    def factor_n(x: int, n: int) -> Iterator[int]:
+        if n * n > x:
             yield x
+            return
+        if x % n == 0:
+            yield n
+            if x // n > 1:
+                yield from factor_n(x // n, n)
+        else:
+            yield from factor_n(x, n + 2)
 
-
-# Faster than isprimer, isprimeg
-# pylint: disable=wrong-import-position
-from Chapter02.ch02_ex1 import isprimei
-import time
-from functools import reduce
-
-def performance():
-    with open("1000.txt") as source:
-        primes = list(parse_g(source))
-    assert len(primes) == 1000
-
-    start = time.perf_counter()
-    for repeat in range(1000):
-        assert all(isprimei(x) for x in primes)
-    print(time.perf_counter() - start)
-
-    start = time.perf_counter()
-    for repeat in range(1000):
-        assert not any(not isprimei(x) for x in primes)
-    print(time.perf_counter() - start)
-
-    start = time.perf_counter()
-    for repeat in range(1000):
-        assert reduce(lambda x, y: x and y, (isprimei(x) for x in primes))
-    print(time.perf_counter() - start)
-
-ItemType = TypeVar("ItemType")
-Flat = Sequence[ItemType]
-Grouped = List[Tuple[ItemType, ...]]
-def group_by_seq(n: int, sequence: Flat) -> Grouped:
-    flat_iter = iter(sequence)
-    full_sized_items = list(
-        tuple(
-            next(flat_iter)
-            for i in range(n)
-            )
-        for row in range(len(sequence)//n)
-        )
-    trailer = tuple(flat_iter)
-    if trailer:
-        return full_sized_items + [trailer]
-    else:
-        return full_sized_items
-
-# ItemType = TypeVar("ItemType")
-Flat_Iter = Iterator[ItemType]
-Grouped_Iter = Iterator[Tuple[ItemType, ...]]
-def group_by_iter(n: int, iterable: Flat_Iter) -> Grouped_Iter:
-    row = tuple(next(iterable) for i in range(n))
-    while row:
-        yield row
-        row = tuple(next(iterable) for i in range(n))
-
-from itertools import zip_longest
-def group_by_slice(
-        n: int,
-        sequence: Sequence[ItemType]) -> Iterator[Tuple[ItemType, ...]]:
-    return zip_longest(*(sequence[i::n] for i in range(n)))
-
-
-def digits(x: int, b: int) -> Iterator[int]:
-    """Digits in  given base. Recursive.
-
-    >>> tuple(digits(126, 2))
-    (0, 1, 1, 1, 1, 1, 1)
-    >>> tuple(digits(126, 16))
-    (14, 7)
-    """
-    if x == 0:
+    if x % 2 == 0:
+        yield 2
+        if x // 2 > 1:
+            yield from pfactorsr(x // 2)
         return
-    yield x % b
-    yield from digits(x//b, b)
+    yield from factor_n(x, 3)
 
-def to_base(x: int, b: int) -> Iterator[int]:
-    """Digits in a more typical order in a given base.
 
-    >>> tuple(to_base(126, 2))
-    (1, 1, 1, 1, 1, 1, 0)
-    >>> bin(126)
-    '0b1111110'
-    >>> tuple(to_base(126, 16))
-    (7, 14)
-    >>> hex(126)
-    '0x7e'
+def test_pfactorsr() -> None:
+    assert list(pfactorsr(1560)) == [2, 2, 2, 3, 5, 13]
+    assert list(pfactorsr(2)) == [2]
+    assert list(pfactorsr(3)) == [3]
 
-    >>> print( bin(126), tuple(to_base(126, 2)) )
-    0b1111110 (1, 1, 1, 1, 1, 1, 0)
-    >>> print( hex(126), tuple(to_base(126, 16)) )
-    0x7e (7, 14)
+
+from collections.abc import Iterator
+
+
+def divisorsr(n: int, a: int = 1) -> Iterator[int]:
+    """Recursive divisors of n
+
+    >>> list(divisorsr(26))
+    [1, 2, 13]
     """
-    return reversed(tuple(digits(x, b)))
+    if a == n:
+        return
+    if n % a == 0:
+        yield a
+    yield from divisorsr(n, a + 1)
 
-# pylint: disable=line-too-long
-__test__ = {
-    "parser_test":
-        """
->>> text= '''   2      3      5      7     11     13     17     19     23     29
-...  31     37     41     43     47     53     59     61     67     71
-... 179    181    191    193    197    199    211    223    227    229
-... '''
->>> data= list(v for line in text.splitlines() for v in line.split())
->>> data
-['2', '3', '5', '7', '11', '13', '17', '19', '23', '29', '31', '37', '41', '43', '47', '53', '59', '61', '67', '71', '179', '181', '191', '193', '197', '199', '211', '223', '227', '229']
 
->>> file = text.splitlines()
->>> blocked = list(line.split() for line in file)
->>> blocked
-[['2', '3', '5', '7', '11', '13', '17', '19', '23', '29'], ['31', '37', '41', '43', '47', '53', '59', '61', '67', '71'], ['179', '181', '191', '193', '197', '199', '211', '223', '227', '229']]
+def divisorsi(n: int) -> Iterator[int]:
+    """Imperative divisors of n
 
->>> (x for line in blocked for x in line)  # doctest: +ELLIPSIS
-<generator object <genexpr> at ...>
->>> list(_)
-['2', '3', '5', '7', '11', '13', '17', '19', '23', '29', '31', '37', '41', '43', '47', '53', '59', '61', '67', '71', '179', '181', '191', '193', '197', '199', '211', '223', '227', '229']
-        """,
-    "grouping_test":
-        """
->>> with open("1000.txt") as source:
-...     flat= list(parse_g(source))
->>> len(flat)
-1000
+    >>> list(divisorsi( 26 ))
+    [1, 2, 13]
+    """
+    return (a for a in range(1, n) if n % a == 0)
 
->>> group7_seq= group_by_seq(7, flat)
->>> group7_seq[-1]
-(7877, 7879, 7883, 7901, 7907, 7919)
 
->>> demo= list(x for line in group7_seq for x in line)
->>> demo == flat
-True
+def perfect(n: int) -> bool:
+    """Perfect numbers test
 
->>> group7_iter= list(group_by_iter(7, iter(flat)))
+    >>> perfect( 6 )
+    True
+    >>> perfect( 28 )
+    True
+    >>> perfect( 26 )
+    False
+    >>> perfect( 496 )
+    True
+    """
+    return sum(divisorsr(n, 1)) == n
 
->>> group7_iter[-1]
-(7877, 7879, 7883, 7901, 7907, 7919)
 
->>> demo= list(x for line in group7_iter for x in line)
->>> demo == flat
-True
+import itertools
+from typing import Any
+from collections.abc import Iterable
 
->>> all= list(group_by_slice(7, flat))
->>> all[0]
-(2, 3, 5, 7, 11, 13, 17)
->>> all[-1]
-(7877, 7879, 7883, 7901, 7907, 7919, None)
-        """
-}
 
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
+def limits(iterable: Iterable[Any]) -> Any:
+    max_tee, min_tee = itertools.tee(iterable, 2)
+    return max(max_tee), min(min_tee)
 
-if __name__ == "__main__":
-    # import sys
-    # print(sys.path)
-    test()
-    # performance()
+
+def test_limits() -> None:
+    assert limits([1, 2, 3, 4, 5]) == (5, 1)
+
+
+from collections.abc import Callable
+
+
+def syntax_check_1() -> None:
+    R = 2
+    g: Callable[[int], int] = lambda x: x + 1
+    f: Callable[[int], int] = lambda y: y * 2
+    g_f_x = (g(f(x)) for x in range(R))
+    assert list(g_f_x) == [1, 3]
+
+
+def syntax_check_2() -> None:
+    R = 2
+    g: Callable[[int], int] = lambda x: x + 1
+    f: Callable[[int], int] = lambda y: y * 2
+    g_f_x = (g(y) for y in (f(x) for x in range(R)))
+    assert list(g_f_x) == [1, 3]
+
+
+def syntax_check_3() -> None:
+    R = 2
+    g: Callable[[int], int] = lambda x: x + 1
+    f: Callable[[int], int] = lambda y: y * 2
+    f_x = (f(x) for x in range(R))
+    g_f_x = (g(y) for y in f_x)
+    assert list(g_f_x) == [1, 3]
+
+
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}

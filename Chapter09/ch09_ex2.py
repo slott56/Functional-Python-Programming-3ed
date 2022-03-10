@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 9, Example Set 2
 
@@ -24,31 +23,26 @@ cost_data = """\
 13,7,5,10,7,7,32
 """
 
-from typing import List, Tuple
-def get_cost_matrix() -> List[Tuple[int, ...]]:
+
+def get_cost_matrix() -> list[tuple[int, ...]]:
     with io.StringIO(cost_data) as source:
         rdr = csv.reader(source)
         cost = list(tuple(map(int, row)) for row in rdr)
     return cost
 
-from itertools import *
 
-def assignment(cost: List[Tuple[int, ...]]) -> List[Tuple[int, ...]]:
+from itertools import permutations
+
+
+def assignment(cost: list[tuple[int, ...]]) -> list[tuple[int, ...]]:
     n = len(cost)
     perms = permutations(range(n))
-    alt = [
-        (
-            sum(
-                cost[x][y] for y, x in enumerate(perm)
-            ),
-            perm
-        )
-        for perm in perms
-    ]
+    alt = [(sum(cost[x][y] for y, x in enumerate(perm)), perm) for perm in perms]
     m = min(alt)[0]
     return [ans for s, ans in alt if s == m]
 
-test_assignment = """
+
+REPL_assignment = """
 >>> from pprint import pprint
 >>> cost= get_cost_matrix()
 >>> len(cost)
@@ -73,32 +67,44 @@ test_assignment = """
 True
 """
 
-def performance():
+
+def performance() -> None:
     """Takes almost 1 minute."""
     import timeit
+
     perf = timeit.timeit(
         """list(permutations(range(10)))""",
         """from itertools import permutations""",
-        number=100)
+        number=100,
+    )
 
-    print("10!", perf/100)
+    print(f"10! hands in {perf/100:.3f} seconds")
 
-test_combinations = """
->>> hands= list(combinations( tuple(product(range(13),'♠♥♦♣')), 5 ))
->>> print( len(hands) )
+
+REPL_combinations = """
+>>> from itertools import combinations, product
+
+>>> hands = list(
+...     combinations(
+...         tuple(
+...             product(range(13), '♠♥♦♣')
+...         ), 5
+...     )
+... )
+
+>>> hands = list(
+...     combinations( 
+...         tuple(
+...             product(range(13),'♠♥♦♣')
+...         ), 5
+...     )
+... )
+>>> print(len(hands))
 2598960
 """
 
-__test__ = {
-    "test_assignment": test_assignment,
-    "test_combinations": test_combinations,
-}
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}
 
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
 
 if __name__ == "__main__":
-    #performance()
-
-    test()
+    performance()

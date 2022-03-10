@@ -1,105 +1,118 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 10, Example Set 1
 """
-# pylint: disable=wrong-import-position
+
 
 def fib(n: int) -> int:
-    """Fibonacci numbers with naive recursion
+    if n == 0:
+        return 0
+    if n == 1:
+        return 1
+    return fib(n - 1) + fib(n - 2)
 
-    >>> fib(20)
-    6765
-    >>> fib(1)
-    1
-    """
-    if n == 0: return 0
-    if n == 1: return 1
-    return fib(n-1) + fib(n-2)
+
+def test_fib() -> None:
+    assert fib(20) == 6765
+    assert fib(1) == 1
+
 
 from functools import lru_cache
 
-@lru_cache(maxsize=128)
+
+@lru_cache(128)
 def fibc(n: int) -> int:
-    """Fibonacci numbers with naive recursion and caching
+    if n == 0:
+        return 0
+    if n == 1:
+        return 1
+    return fibc(n - 1) + fibc(n - 2)
 
-    >>> fibc(20)
-    6765
-    >>> fibc(1)
-    1
-    """
-    if n == 0: return 0
-    if n == 1: return 1
-    return fibc(n-1) + fibc(n-2)
 
-def performance_fib():
+def test_fibc() -> None:
+    assert fibc(20) == 6765
+    assert fibc(1) == 1
+
+
+def performance_fib() -> None:
+    from textwrap import dedent
     import timeit
 
-    f1 = timeit.timeit(
-        """fib(20)""",
-        setup="""from ch10_ex1 import fib""", number=1000)
-    print("Naive", f1)
+    naive_time = timeit.timeit(
+        """fib(20)""", setup="""from Chapter10.ch10_ex1 import fib""", number=1000
+    )
 
-    f2 = timeit.timeit(
+    cached_time = timeit.timeit(
         """fibc(20); fibc.cache_clear()""",
-        setup="""from ch10_ex1 import fibc""", number=1000)
-    print("Cached", f2)
+        setup="""from Chapter10.ch10_ex1 import fibc""",
+        number=1000,
+    )
+
+    print(f"Naive {naive_time:.3f}")
+    print(f"Cached {cached_time:.3f}")
+
 
 def nfact(n: int) -> int:
-    """
-    >>> nfact(5)
-    120
-    """
-    if n == 0: return 1
-    return n*nfact(n-1)
+    if n == 0:
+        return 1
+    return n * nfact(n - 1)
+
+
+def test_nfact() -> None:
+    assert nfact(5) == 120
+
 
 @lru_cache(maxsize=128)
 def cfact(n: int) -> int:
-    """
-    >>> cfact(5)
-    120
-    """
-    if n == 0: return 1
-    return n*cfact(n-1)
+    if n == 0:
+        return 1
+    return n * cfact(n - 1)
 
-from typing import Callable
+
+def test_cfact() -> None:
+    assert cfact(5) == 120
+
+
+from collections.abc import Callable
+
+
 def binom(p: int, r: int, fact: Callable[[int], int]) -> int:
-    """
-    >>> nfact(5)
-    120
-    >>> binom(52, 5, nfact)
-    2598960
-    >>> binom(52, 5, cfact)
-    2598960
-    """
-    return fact(p)//(fact(r)*fact(p-r))
+    return fact(p) // (fact(r) * fact(p - r))
 
-def performance_fact():
+
+def test_binom() -> None:
+    assert nfact(5) == 120
+    assert binom(52, 5, nfact) == 2598960
+    assert binom(52, 5, cfact) == 2598960
+
+
+def performance_fact() -> None:
     import timeit
 
-    f1 = timeit.timeit(
+    naive_time = timeit.timeit(
         """binom(52, 5, nfact)""",
-        setup="""from ch10_ex1 import binom, nfact""", number=10000)
-    print("Naive Factorial", f1)
+        setup="""from Chapter10.ch10_ex1 import binom, nfact""",
+        number=10000,
+    )
 
-    f2 = timeit.timeit(
+    cached_time = timeit.timeit(
         """binom(52, 5, cfact)""",
-        setup="""from ch10_ex1 import binom, cfact""", number=10000)
-    print("Cached Factorial, Dirty", f2)
+        setup="""from Chapter10.ch10_ex1 import binom, cfact""",
+        number=10000,
+    )
 
-    f3 = timeit.timeit(
+    cached_with_clear_time = timeit.timeit(
         """binom(52, 5, cfact); cfact.cache_clear()""",
-        setup="""from ch10_ex1 import binom, cfact""", number=10000)
-    print("Cached Factorial, Cleared", f3)
+        setup="""from Chapter10.ch10_ex1 import binom, cfact""",
+        number=10000,
+    )
+    print(f"Naive Factorial {naive_time:.3f}")
+    print(f"Cached Factorial, Dirty {cached_time:.3f}")
+    print(f"Cached Factorial, Cleared {cached_with_clear_time:.3f}")
 
-def performance():
-    performance_fib()
-    performance_fact()
 
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}
 
 if __name__ == "__main__":
-    test()
-    performance()
+    performance_fib()
+    performance_fact()

@@ -1,186 +1,233 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 6, Example Set 1
 """
-# pylint: disable=reimported,wrong-import-position
+
 
 def add(a: int, b: int) -> int:
-    """Recursive addition.
-
-    >>> add( 3, 5 )
-    8
-    """
     if a == 0:
         return b
-    elif b == 0:
-        return a
-    else: return add(a-1, b+1)
+    else:
+        return add(a - 1, b + 1)
+
+
+def test_add() -> None:
+    assert add(3, 5) == 8
+
 
 def fact(n: int) -> int:
-    """Recursive Factorial
-
-    >>> fact(0)
-    1
-    >>> fact(1)
-    1
-    >>> fact(7)
-    5040
-    """
     if n == 0:
         return 1
     else:
-        return n*fact(n-1)
+        return n * fact(n - 1)
+
+
+def test_fact() -> None:
+    assert fact(0) == 1
+    assert fact(1) == 1
+    assert fact(7) == 5040
+
 
 def facti(n: int) -> int:
-    """Imperative Factorial
-
-    >>> fact(0)
-    1
-    >>> fact(1)
-    1
-    >>> fact(7)
-    5040
-    """
     if n == 0:
         return 1
     f = 1
-    for i in range(2, n):
-        f = f*i
+    for i in range(2, n + 1):
+        f = f * i
     return f
 
-def fastexp(a: float, n: int) -> float:
-    """Recursive exponentiation by squaring
 
-    >>> fastexp( 3, 11 )
-    177147
-    """
+def test_facti() -> None:
+    assert facti(0) == 1
+    assert facti(1) == 1
+    assert facti(2) == 2
+    assert facti(3) == 6
+    assert facti(4) == 24
+    assert facti(7) == 5040
+
+
+def fastexp(a: float, n: int) -> float:
     if n == 0:
         return 1
     elif n % 2 == 1:
-        return a*fastexp(a, n-1)
+        return a * fastexp(a, n - 1)
     else:
-        t = fastexp(a, n//2)
-        return t*t
+        t = fastexp(a, n // 2)
+        return t * t
+
+
+def test_fastexp() -> None:
+    assert fastexp(3, 11) == 177147
+    assert fastexp(2, 20) == 1048576
+
 
 def fib(n: int) -> int:
-    """Fibonacci numbers with naive recursion
-
-    >>> fib(20)
-    6765
-    >>> fib(1)
-    1
-    """
     if n == 0:
         return 0
     if n == 1:
         return 1
-    return fib(n-1) + fib(n-2)
+    return fib(n - 1) + fib(n - 2)
+
+
+def test_fib() -> None:
+    assert fib(20) == 6765
+    assert fib(0) == 0
+    assert fib(1) == 1
+    assert fib(2) == 1
+    assert fib(3) == 2
+    assert fib(4) == 3
+    assert fib(5) == 5
+
 
 def fibi(n: int) -> int:
-    """Fibonacci numbers saving just two previous values
-
-    >>> fibi(20)
-    6765
-    >>> fibi(1)
-    1
-    >>> fibi(2)
-    1
-    >>> fibi(3)
-    2
-    """
     if n == 0:
         return 0
     if n == 1:
         return 1
     f_n2, f_n1 = 1, 1
-    for _ in range(3, n+1):
-        f_n2, f_n1 = f_n1, f_n2+f_n1
+    for _ in range(2, n):
+        f_n2, f_n1 = f_n1, f_n2 + f_n1
     return f_n1
 
-def fibi2(n: int) -> int:
-    """Fibonacci numbers with iteration and memoization
 
-    >>> fibi2(20)
-    6765
-    >>> fibi2(1)
-    1
-    """
-    f = [0, 1] + [None for _ in range(2, n+1)]
-    for i in range(2, n+1):
-        f[i] = f[i-1]+f[i-2]
+def test_fibi() -> None:
+    assert fibi(20) == 6765
+    assert fibi(0) == 0
+    assert fibi(1) == 1
+    assert fibi(2) == 1
+    assert fibi(3) == 2
+    assert fibi(4) == 3
+    assert fibi(5) == 5
+
+
+def fibi2(n: int) -> int:
+    f = [0, 1] + [0 for _ in range(2, n + 1)]
+    for i in range(2, n + 1):
+        f[i] = f[i - 1] + f[i - 2]
     return f[n]
 
-from typing import Callable, Sequence, Any, List
-def mapr(
-        f: Callable[[Any], Any],
-        collection: Sequence[Any]) -> List[Any]:
-    """Recursive definition of map-like function.
 
-    >>> mapr( lambda x:2**x, [0, 1, 2, 3, 4] )
-    [1, 2, 4, 8, 16]
-    """
+def test_fibi2() -> None:
+    assert fibi2(20) == 6765
+    assert fibi2(0) == 0
+    assert fibi2(1) == 1
+    assert fibi2(2) == 1
+    assert fibi2(3) == 2
+    assert fibi2(4) == 3
+    assert fibi2(5) == 5
+
+
+from collections.abc import Callable, Sequence
+from typing import Any, TypeVar
+
+MapD = TypeVar("MapD")
+MapR = TypeVar("MapR")
+
+
+def mapr(f: Callable[[MapD], MapR], collection: Sequence[MapD]) -> list[MapR]:
     if len(collection) == 0:
         return []
     return mapr(f, collection[:-1]) + [f(collection[-1])]
 
-from typing import Callable, Iterable, Iterator, Any, TypeVar
-D_ = TypeVar("D_")
-R_ = TypeVar("R_")
-def mapf(f: Callable[[D_], R_], C: Iterable[D_]) -> Iterator[R_]:
-    """Higher-Order definition of map.
 
-    >>> list( mapf( lambda x:2**x, [0, 1, 2, 3, 4] ) )
-    [1, 2, 4, 8, 16]
-    """
+from typing import cast
+
+
+def test_mapr() -> None:
+    assert mapr(lambda x: cast(int, 2 ** x), [0, 1, 2, 3, 4]) == [1, 2, 4, 8, 16]
+
+
+from collections.abc import Callable, Iterable, Iterator
+from typing import Any, TypeVar
+
+DomT = TypeVar("DomT")
+RngT = TypeVar("RngT")
+
+
+def mapf(f: Callable[[DomT], RngT], C: Iterable[DomT]) -> Iterator[RngT]:
     return (f(x) for x in C)
 
-def mapg(f: Callable[[D_], R_], C: Iterable[D_]) -> Iterator[R_]:
-    """Generator definition of map
 
-    >>> list( mapg( lambda x:2**x, [0, 1, 2, 3, 4] ) )
-    [1, 2, 4, 8, 16]
-    """
+def test_mapf() -> None:
+    assert list(mapf(lambda x: cast(int, 2 ** x), [0, 1, 2, 3, 4])) == [1, 2, 4, 8, 16]
+
+
+def mapg(f: Callable[[DomT], RngT], C: Iterable[DomT]) -> Iterator[RngT]:
     for x in C:
         yield f(x)
 
-def prodi(items: Iterable[float]) -> float:
-    """Imperative product
 
-    >>> prodi( [1,2,3,4,5,6,7] )
-    5040
-    """
+def test_mapg() -> None:
+    assert list(mapg(lambda x: cast(int, 2 ** x), [0, 1, 2, 3, 4])) == [1, 2, 4, 8, 16]
+
+
+REPL_test_mapg = """
+>>> list(mapg(lambda x: 2 ** x, [0, 1, 2, 3, 4]))
+[1, 2, 4, 8, 16]
+"""
+
+
+def fastexp_w(a: float, n: int) -> float:
+    if n == 0:
+        return 1
+    else:
+        q, r = divmod(n, 2)
+        if r == 1:
+            return a * fastexp_w(a, n - 1)
+        else:
+            return (t := fastexp_w(a, q)) * t
+
+
+def test_fastexp_w() -> None:
+    assert fastexp_w(3, 11) == 177147
+    assert fastexp_w(2, 20) == 1048576
+
+
+from collections.abc import Sequence
+
+
+def prodrc(collection: Sequence[float]) -> float:
+    if len(collection) == 0:
+        return 1
+    return collection[0] * prodrc(collection[1:])
+
+
+def test_prod_rc() -> None:
+    assert prodrc([1, 2, 3, 4, 5, 6, 7]) == 5040
+
+
+from collections.abc import Iterator
+
+
+def prodri(items: Iterator[float]) -> float:
+    try:
+        head = next(items)
+    except StopIteration:
+        return 1
+    return head * prodri(items)
+
+
+def test_prod_ri() -> None:
+    assert prodri(iter([1, 2, 3, 4, 5, 6, 7])) == 5040
+
+
+REPL_prod_ri = """
+>>> prodri(iter([1,2,3,4,5,6,7]))
+5040
+"""
+
+from collections.abc import Iterable
+
+
+def prodi(items: Iterable[float]) -> float:
     p: float = 1
     for n in items:
         p *= n
     return p
 
-def prodrc(collection: Sequence[float]) -> float:
-    """Recursive product with a collection
 
-    >>> prodrc( [1,2,3,4,5,6,7] )
-    5040
-    """
-    if len(collection) == 0:
-        return 1
-    return collection[0] * prodrc(collection[1:])
-
-def prodri(items: Iterator[float]) -> float:
-    """Recursive product with an iterable
-
-    >>> prodri( iter([1,2,3,4,5,6,7]) )
-    5040
-    """
-    try:
-        head = next(items)
-    except StopIteration:
-        return 1
-    return head*prodri(items)
+def test_prod_i() -> None:
+    assert prodi(iter([1, 2, 3, 4, 5, 6, 7])) == 5040
 
 
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
-
-if __name__ == "__main__":
-    test()
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}

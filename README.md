@@ -1,5 +1,5 @@
-# Functional Python Programming - Second Edition
-This is the code repository for [Functional Python Programming - Second Edition](https://www.packtpub.com/application-development/functional-python-programming-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781788627061), published by [Packt](https://www.packtpub.com/?utm_source=github). It contains all the supporting project files necessary to work through the book from start to finish.
+# Functional Python Programming - Third Edition
+This is the code repository for [Functional Python Programming - Third Edition](https://www.packtpub.com/application-development/functional-python-programming-third-edition?utm_source=github&utm_medium=repository&utm_campaign=9781788627061), published by [Packt](https://www.packtpub.com/?utm_source=github). It contains all the supporting project files necessary to work through the book from start to finish.
 ## About the Book
 If you’re a Python developer who wants to discover how to take the power of functional programming (FP) and bring it into your own programs, then this book is essential for you, even if you know next to nothing about the paradigm.
 
@@ -37,25 +37,35 @@ Examples in Chapter 14, The PyMonad Library, use PyMonad; check out https://pypi
 
 All of these packages should be installed using the following:
 
+```bash
 $ pip install pillow beautifulsoup4 PyMonad
+```
 
 To confirm that all the doctests pass run the following:
 
+```bash
 $ python3 test_all.py
+```
 
 To run the tests chapter wise use the following:
 
+```bash
 $ python3 -m doctest (folder name)/*.py
+```
 
 Example:
 
+```bash
 $ python3 -m doctest Chapter03/*.py
+```
 
 There is no response when the tests pass.
 
 If you want details, you can run the following:
 
+```bash
 $ python3 -m doctest -v Chapter04/*.py
+```
 
 This will produce a lot of detail, but at the end is a count of tests passed.
 

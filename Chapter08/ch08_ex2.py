@@ -1,50 +1,73 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 8, Example Set 2
 """
-# pylint: disable=wrong-import-position
-from itertools import count
-from typing import Callable, Iterator, TypeVar, Tuple
 
-Generator = Iterator[Tuple[float, float]]
-source: Generator = zip(count(0, 0.1), (.1*c for c in count()))
+REPL_enumerate = """
+>>> from itertools import count
+>>> enumerate = lambda x, start=0: zip(count(start), x)
 
-Extractor = Callable[[Tuple[float, float]], float]
-x: Extractor = lambda x_y: x_y[0]
-y: Extractor = lambda x_y: x_y[1]
+>>> list(zip(count(), iter('word')))
+[(0, 'w'), (1, 'o'), (2, 'r'), (3, 'd')]
+>>> list(enumerate(iter('word')))
+[(0, 'w'), (1, 'o'), (2, 'r'), (3, 'd')]
+"""
 
-Comparator = Callable[[Tuple[float, float]], bool]
-neq: Comparator = lambda xy: abs(x(xy)-y(xy)) > 1.0E-12
+from collections.abc import Callable, Iterator
+from typing import TypeVar
 
-T_ = TypeVar("T_")
-def until(
-        terminate: Callable[[T_], bool],
-        iterator: Iterator[T_]
-    ) -> T_:
+T = TypeVar("T")
+
+
+def until(terminate: Callable[[T], bool], iterator: Iterator[T]) -> T:
     i = next(iterator)
     if terminate(i):
         return i
     return until(terminate, iterator)
 
-accumulated_error_1 = """
+
+from itertools import count
+from collections.abc import Iterator, Callable
+
+Pair_Gen = Iterator[tuple[float, float]]
+source: Pair_Gen = zip(count(0, 0.1), (0.1 * c for c in count()))
+
+Extractor = Callable[[tuple[float, float]], float]
+x: Extractor = lambda x_y: x_y[0]
+y: Extractor = lambda x_y: x_y[1]
+
+Comparator = Callable[[tuple[float, float]], bool]
+neq: Comparator = lambda xy: abs(x(xy) - y(xy)) > 1.0e-12
+
+REPL_accumulated_error_1 = """
 >>> until(neq, source)
 (92.799999999999, 92.80000000000001)
+
+>>> source: Pair_Gen = zip(count(0, 0.1), (.1*c for c in count()))
+
+>>> until(lambda xy: x(xy) != y(xy), source)
+(0.6, 0.6000000000000001)
 """
 
-def until_i(
-        terminate: Callable[[T_], bool],
-        iterator: Iterator[T_]) -> T_:
+from collections.abc import Callable, Iterator
+from typing import TypeVar
+
+UT = TypeVar("UT")
+
+
+def until_i(terminate: Callable[[UT], bool], iterator: Iterator[UT]) -> UT:
     for i in iterator:
         if terminate(i):
             return i
     raise StopIteration
 
-accumulated_error_2 = """
+
+REPL_accumulated_error_2 = """
+>>> from itertools import count
 >>> source_2 = zip(count(0, .1), (.1*c for c in count()))
 >>> x = lambda x_y: x_y[0]
 >>> y = lambda x_y: x_y[1]
->>> neq6: Callable[[Tuple[float, float]], bool] = lambda xy: abs(x(xy)-y(xy)) > 1.0E-6
+>>> neq6: Callable[[tuple[float, float]], bool] = lambda xy: abs(x(xy)-y(xy)) > 1.0E-6
 >>> until_i(neq6, source_2)
 (94281.30000100001, 94281.3)
 >>> source_3 = zip( count(0, 1/35), (c/35 for c in count()) )
@@ -55,76 +78,151 @@ accumulated_error_2 = """
 (0.2285714285714286, 0.22857142857142856)
 """
 
-fizz_buzz = """
-# Silly fizz-buzz-like problem.
+REPL_fizz_buzz = """
 >>> from itertools import cycle
->>> m3 = (i == 0 for i in cycle(range(3)))
->>> m5 = (i == 0 for i in cycle(range(5)))
->>> multipliers = zip(range(10), m3, m5)
->>> list(multipliers)
-[(0, True, True), (1, False, False), (2, False, False), (3, True, False), (4, False, False), (5, False, True), (6, True, False), (7, False, False), (8, False, False), (9, True, False)]
 
 >>> m3 = (i == 0 for i in cycle(range(3)))
 >>> m5 = (i == 0 for i in cycle(range(5)))
+
+>>> multipliers = zip(range(10), m3, m5)
+
+This consumes from m3 and m5, changing their state
+
+>>> list(multipliers)
+[(0, True, True), (1, False, False), (2, False, False), ..., (9, True, False)]
+
+Reset them for the following example
+
+>>> m3 = (i == 0 for i in cycle(range(3)))
+>>> m5 = (i == 0 for i in cycle(range(5)))
+
 >>> multipliers = zip(range(10), m3, m5)
 >>> total = sum(i
-...    for i, *multipliers in multipliers
-...    if any(multipliers))
+...     for i, *multipliers in multipliers
+...     if any(multipliers)
+... )
+
+Reset the m3 and m5 cycles again for another example
+>>> m3 = (i == 0 for i in cycle(range(3)))
+>>> m5 = (i == 0 for i in cycle(range(5)))
+>>> list(zip(range(10), m3, m5))
+[(0, True, True), (1, False, False), (2, False, False), (3, True, False), (4, False, False), (5, False, True), (6, True, False), (7, False, False), (8, False, False), (9, True, False)]
+
 >>> total
 23
 """
 
-file_filter = """
->>> import io
->>> import csv
->>> from itertools import cycle, compress
->>> chooser = (x == 0 for x in cycle(range(3)))
->>> with open("Anscombe.txt") as source_file:
-...    rdr= csv.reader( source_file, delimiter="\\t" )
-...    #keep= (row for pick, row in zip(chooser, rdr) if pick)
-...    keep= tuple( compress( rdr, chooser ) )
->>> for row in keep:
-...    print( row )
-["Anscombe's quartet"]
-['10.0', '8.04', '10.0', '9.14', '10.0', '7.46', '8.0', '6.58']
-['9.0', '8.81', '9.0', '8.77', '9.0', '7.11', '8.0', '8.84']
-['6.0', '7.24', '6.0', '6.13', '6.0', '6.08', '8.0', '5.25']
-['7.0', '4.82', '7.0', '7.26', '7.0', '6.42', '8.0', '7.91']
-"""
+from collections.abc import Iterable, Iterator
+from itertools import cycle
+from typing import TypeVar
 
-repeater = """
+DT = TypeVar("DT")
+
+
+def subset_iter(source: Iterable[DT], n: int) -> Iterator[DT]:
+    chooser = (x == 0 for x in cycle(range(n)))
+    yield from (row for keep, row in zip(chooser, source) if keep)
+
+
+import csv
+from pathlib import Path
+
+
+def csv_subset(source: Path, target: Path, ratio: int = 3) -> None:
+    with (source.open() as source_file, target.open("w", newline="") as target_file):
+        rdr = csv.reader(source_file, delimiter="\t")
+        wtr = csv.writer(target_file)
+        wtr.writerows(subset_iter(rdr, ratio))
+
+
+def test_csv_subset(tmp_path: Path) -> None:
+    import csv
+
+    source_path = Path("Anscombe.txt")
+    target_path = tmp_path / "subset.txt"
+    csv_subset(source_path, target_path, 3)
+
+    with target_path.open() as result:
+        rdr = csv.reader(result)
+        rows = list(rdr)
+    assert rows == [
+        ["Anscombe's quartet"],
+        ["10.0", "8.04", "10.0", "9.14", "10.0", "7.46", "8.0", "6.58"],
+        ["9.0", "8.81", "9.0", "8.77", "9.0", "7.11", "8.0", "8.84"],
+        ["6.0", "7.24", "6.0", "6.13", "6.0", "6.08", "8.0", "5.25"],
+        ["7.0", "4.82", "7.0", "7.26", "7.0", "6.42", "8.0", "7.91"],
+    ]
+
+
+from itertools import cycle, repeat
+
+
+def subset_rule_iter(source: Iterable[DT], rule: Iterator[bool]) -> Iterator[DT]:
+    return (v for v, keep in zip(source, rule) if keep)
+
+
+all_rows = lambda: repeat(True)
+subset = lambda n: (i == 0 for i in cycle(range(n)))
+
+
+import random
+
+
+def randomized(limit: int) -> Iterator[bool]:
+    while True:
+        yield random.randrange(limit) == 0
+
+
+REPL_repeater = """
 >>> import random
->>> from itertools import cycle, repeat, compress
->>> all = repeat(0)
->>> subset = cycle(range(3))
->>> def randseq(limit):
-...     while True:
-...         yield random.randrange(limit)
->>> randomized = randseq(3)
->>> choose = lambda rule: (x == 0 for x in rule)
->>> random.seed(1)
->>> data = [random.randint(1,12) for _ in range(12)]
+>>> random.seed(42)
+>>> data = [random.randint(1, 12) for _ in range(12)]
 >>> data
-[3, 10, 2, 5, 2, 8, 8, 8, 11, 7, 4, 2]
->>> [v for v, pick in zip(data, choose(all)) if pick]
-[3, 10, 2, 5, 2, 8, 8, 8, 11, 7, 4, 2]
->>> [v for v, pick in zip(data, choose(subset)) if pick]
-[3, 5, 8, 7]
->>> random.seed(1)
->>> [v for v, pick in zip(data, choose(randomized)) if pick]
-[3, 2, 2, 4, 2]
+[11, 2, 1, 12, 5, 4, 4, 3, 12, 2, 11, 12]
 
->>> list(compress(data, choose(all)))
-[3, 10, 2, 5, 2, 8, 8, 8, 11, 7, 4, 2]
->>> list(compress(data, choose(subset)))
-[3, 5, 8, 7]
->>> random.seed(1)
->>> list(compress(data, choose(randomized)))
-[3, 2, 2, 4, 2]
+>>> list(subset_rule_iter(data, all_rows()))
+[11, 2, 1, 12, 5, 4, 4, 3, 12, 2, 11, 12]
+>>> list(subset_rule_iter(data, subset(3)))
+[11, 12, 4, 2]
+
+>>> random.seed(42)
+>>> list(subset_rule_iter(data, randomized(3)))
+[2, 1, 4, 4, 3, 2]
+
+>>> random.seed(42)
+>>> data = [random.randint(1, 12) for _ in range(12)]
+>>> data
+[11, 2, 1, 12, 5, 4, 4, 3, 12, 2, 11, 12]
+
+>>> [v for v, pick in zip(data, all_rows()) if pick]
+[11, 2, 1, 12, 5, 4, 4, 3, 12, 2, 11, 12]
+>>> [v for v, pick in zip(data, subset(3)) if pick]
+[11, 12, 4, 2]
+>>> random.seed(42)
+>>> [v for v, pick in zip(data, randomized(3)) if pick]
+[2, 1, 4, 4, 3, 2]
+
+>>> from itertools import compress
+>>> list(compress(data, all_rows()))
+[11, 2, 1, 12, 5, 4, 4, 3, 12, 2, 11, 12]
+>>> list(compress(data, subset(3)))
+[11, 12, 4, 2]
+
+>>> random.seed(42)
+>>> list(compress(data, randomized(3)))
+[2, 1, 4, 4, 3, 2]
 
 """
 
-squares = """
+REPL_enumerate = """
+>>> raw_values = [1.2, .8, 1.2, 2.3, 11, 18]
+
+>>> tuple(enumerate(sorted(raw_values)))
+((0, 0.8), (1, 1.2), (2, 1.2), (3, 2.3), (4, 11), (5, 18))
+"""
+
+
+REPL_squares = """
 >>> from itertools import repeat
 >>> squares = list(sum(repeat(i, times=i)) for i in range(10))
 >>> print( squares )
@@ -132,18 +230,5 @@ squares = """
 
 """
 
-__test__ = {
-    "accumulated_error_1": accumulated_error_1,
-    "accumulated_error_2": accumulated_error_2,
-    "fizz_buzz": fizz_buzz,
-    "file_filter": file_filter,
-    "repeat": repeater,
-    "squares": squares,
-}
 
-def test():
-    import doctest
-    doctest.testmod(verbose=True)
-
-if __name__ == "__main__":
-    test()
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}

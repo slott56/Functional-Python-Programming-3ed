@@ -1,183 +1,323 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 6, Example Set 3
 """
-# pylint: disable=reimported,wrong-import-order,wrong-import-position
+
+from collections.abc import Iterator
+from enum import Enum
+import re
+
+
+class Token(Enum):
+    SPACE = 1
+    PARA = 2
+    EOF = 3
+
+
+def lexical_scan(some_source: str) -> Iterator[tuple[Token, str]]:
+    previous_end = 0
+    separator_pat = re.compile(r"\n\s*\n", re.M | re.S)
+    for sep in separator_pat.finditer(some_source):
+        start, end = sep.span()
+        yield Token.PARA, some_source[previous_end:start]
+        yield Token.SPACE, some_source[start:end]
+        previous_end = end
+    yield Token.PARA, some_source[previous_end:]
+    yield Token.EOF, ""
+
 
 import xml.etree.ElementTree as XML
 import re
 
 from typing import Tuple, List, Any
 
-def pick_lat_lon(lon: Any, lat: Any, alt: Any) -> Tuple[Any, Any]:
-    return lat, lon
 
-def comma_split(text: str) -> List[str]:
+from collections.abc import Iterator
+from typing import TextIO, cast
+
+
+def comma_split(text: str) -> list[str]:
     return text.split(",")
 
-from typing import TextIO, Iterator, Tuple, cast
-def float_lat_lon3(file_obj: TextIO) -> Iterator[Tuple[float, ...]]:
-    """
-    Less than ideal parser: does too much in one hard-to-tweak step.
 
-    >>> import io
-    >>> doc= io.StringIO('''<?xml version="1.0" encoding="UTF-8"?>
-    ... <kml xmlns="http://www.opengis.net/kml/2.2"
-    ...     xmlns:gx="http://www.google.com/kml/ext/2.2"
-    ...     xmlns:kml="http://www.opengis.net/kml/2.2"
-    ...     xmlns:atom="http://www.w3.org/2005/Atom">
-    ... <Document>
-    ...	    <Folder>
-    ...		<name>Waypoints.kml</name>
-    ...		<open>1</open>
-    ...		<Placemark>
-    ...			<Point>
-    ...				<coordinates>-76.33029518659048,37.54901619777347,0</coordinates>
-    ...			</Point>
-    ...		</Placemark>
-    ...    </Folder>
-    ... </Document>
-    ... </kml>''')
-    >>> list(float_lat_lon3( doc ))
-    [(37.54901619777347, -76.33029518659048)]
-    """
+def row_iter_kml(file_obj: TextIO) -> Iterator[list[str]]:
     ns_map = {
         "ns0": "http://www.opengis.net/kml/2.2",
-        "ns1": "http://www.google.com/kml/ext/2.2"}
-    xpath = (
-        "./ns0:Document/ns0:Folder/"
-        "ns0:Placemark/ns0:Point/ns0:coordinates")
+        "ns1": "http://www.google.com/kml/ext/2.2",
+    }
+    xpath = "./ns0:Document/ns0:Folder/" "ns0:Placemark/ns0:Point/ns0:coordinates"
     doc = XML.parse(file_obj)
     return (
-        tuple(
-            map(float,
-                pick_lat_lon(*comma_split(
-                    cast(str, coordinates.text)
-                ))
-               )
-        )
+        comma_split(cast(str, coordinates.text))
         for coordinates in doc.findall(xpath, ns_map)
     )
 
-test_float_lan_lon3 = """
+
+#
+# def comma_split(text: str) -> List[str]:
+#     return text.split(",")
+#
+# from typing import TextIO, Iterator, Tuple, cast
+# def float_lat_lon3(file_obj: TextIO) -> Iterator[Tuple[float, ...]]:
+#     ns_map = {
+#         "ns0": "http://www.opengis.net/kml/2.2",
+#         "ns1": "http://www.google.com/kml/ext/2.2"}
+#     xpath = (
+#         "./ns0:Document/ns0:Folder/"
+#         "ns0:Placemark/ns0:Point/ns0:coordinates")
+#     doc = XML.parse(file_obj)
+#     return (
+#         tuple(
+#             map(float,
+#                 pick_lat_lon(*comma_split(
+#                     cast(str, coordinates.text)
+#                 ))
+#                )
+#         )
+#         for coordinates in doc.findall(xpath, ns_map)
+#     )
+
+
+REPL_test_row_iter_kml = """
+>>> import io
+>>> doc= io.StringIO('''<?xml version="1.0" encoding="UTF-8"?>
+... <kml xmlns="http://www.opengis.net/kml/2.2"
+...     xmlns:gx="http://www.google.com/kml/ext/2.2"
+...     xmlns:kml="http://www.opengis.net/kml/2.2"
+...     xmlns:atom="http://www.w3.org/2005/Atom">
+... <Document>
+...	    <Folder>
+...		<name>Waypoints.kml</name>
+...		<open>1</open>
+...		<Placemark>
+...			<Point>
+...				<coordinates>-76.33029518659048,37.54901619777347,0</coordinates>
+...			</Point>
+...		</Placemark>
+...    </Folder>
+... </Document>
+... </kml>''')
+>>> list(row_iter_kml(doc))
+[['-76.33029518659048', '37.54901619777347', '0']]
+"""
+
+from collections.abc import Iterator
+
+
+def pick_lat_lon(lon: str, lat: str, alt: str) -> tuple[str, str]:
+    return lat, lon
+
+
+def float_lat_lon(row_iter: Iterator[list[str]]) -> Iterator[tuple[float, float]]:
+    lat_lon_iter = (pick_lat_lon(*row) for row in row_iter)
+    return ((float(lat), float(lon)) for lat, lon in lat_lon_iter)
+
+
+#
+# def float_lat_lon(
+#         row_iter: Iterator[Tuple[str, ...]]) -> Iterator[Tuple[float, ...]]:
+#     return (
+#         tuple(
+#             map(float, pick_lat_lon(*row))
+#         )
+#         for row in row_iter
+#     )
+
+
+def test_kml_parser() -> None:
+    import urllib.request
+
+    source_url = "file:./Winter%202012-2013.kml"
+    with urllib.request.urlopen(source_url) as source:
+        flat = tuple(float_lat_lon(row_iter_kml(source)))
+    assert len(flat) == 74
+    assert flat[0] == (37.54901619777347, -76.33029518659048)
+    assert flat[-1] == (38.976334, -76.473503)
+
+
+REPL_test_kml_parser = """
 >>> import urllib.request
->>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
-...    trip= tuple(float_lat_lon3(source))
->>> len(trip)
+>>> source_url = "file:./Winter%202012-2013.kml"
+>>> with urllib.request.urlopen(source_url) as source:
+...      flat = tuple(float_lat_lon(row_iter_kml(source)))
+>>> len(flat)
 74
->>> trip[0]
+>>> flat[0]
 (37.54901619777347, -76.33029518659048)
->>> trip[-1]
+>>> flat[-1]
 (38.976334, -76.473503)
 
 """
 
-def row_iter_kml(file_obj: TextIO) -> Iterator[List[str]]:
-    """
-    More consistent with CSV parsing.
-    Low-level produces rows of tuples of text.
-    High-level produces application objects.
+from collections.abc import Iterator
+import csv
+from typing import TextIO
 
-    """
-    ns_map = {
-        "ns0": "http://www.opengis.net/kml/2.2",
-        "ns1": "http://www.google.com/kml/ext/2.2"}
-    xpath = (
-        "./ns0:Document/ns0:Folder/"
-        "ns0:Placemark/ns0:Point/ns0:coordinates")
-    doc = XML.parse(file_obj)
-    return (
-        comma_split(
-            cast(str, coordinates.text)
-        )
-        for coordinates in doc.findall(xpath, ns_map)
-    )
 
-def float_lat_lon(
-        row_iter: Iterator[Tuple[str, ...]]) -> Iterator[Tuple[float, ...]]:
-    return (
-        tuple(
-            map(float, pick_lat_lon(*row))
-        )
-        for row in row_iter
-    )
+def row_iter_csv(source: TextIO) -> Iterator[list[str]]:
+    rdr = csv.reader(source, delimiter="\t")
+    return rdr
 
-test_row_iter_kml = """
->>> import urllib.request
->>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
-...     trip = tuple( float_lat_lon(row_iter_kml(source)) )
->>> len(trip)
-74
->>> trip[0]
-(37.54901619777347, -76.33029518659048)
->>> trip[-1]
-(38.976334, -76.473503)
 
-"""
+from typing import cast
 
-Head_Body = Tuple[Tuple[str, str], Iterator[List[str]]]
+
+def float_none(data: str) -> float | None:
+    try:
+        data_f = float(data)
+        return data_f
+    except ValueError:
+        return None
+
+
+from collections.abc import Callable
+
+R_Float = list[float | None]
+
+float_row: Callable[[list[str]], R_Float] = lambda row: list(map(float_none, row))
+all_numeric: Callable[[R_Float], bool] = lambda row: all(row) and len(row) == 8
+
+
+def test_csv_parser() -> None:
+    from pathlib import Path
+
+    source_path = Path("Anscombe.txt")
+    with source_path.open() as source:
+        candidates = map(float_row, row_iter_csv(source))
+        valid = filter(all_numeric, candidates)
+        data = list(valid)
+    assert len(data) == 11
+    assert data[0] == [10.0, 8.04, 10.0, 9.14, 10.0, 7.46, 8.0, 6.58]
+    assert data[-1] == [5.0, 5.68, 5.0, 4.74, 5.0, 5.73, 8.0, 6.89]
+
+
+from collections.abc import Iterator
+from typing import TextIO
+
+Head_Body = tuple[tuple[str, str], Iterator[list[str]]]
+
+
 def row_iter_gpl(file_obj: TextIO) -> Head_Body:
-    header_pat = re.compile(
-        r"GIMP Palette\nName:\s*(.*?)\nColumns:\s*(.*?)\n#\n",
-        re.M)
+    header_pat = re.compile(r"GIMP Palette\nName:\s*(.*?)\nColumns:\s*(.*?)\n#\n", re.M)
 
-    def read_head(
-            file_obj: TextIO
-        ) -> Tuple[Tuple[str, str], TextIO]:
-        match = header_pat.match("".join(file_obj.readline() for _ in range(4)))
-        return (match.group(1), match.group(2)), file_obj
+    def read_head(file_obj: TextIO) -> tuple[tuple[str, str], TextIO]:
+        if match := header_pat.match("".join(file_obj.readline() for _ in range(4))):
+            return (match.group(1), match.group(2)), file_obj
+        else:
+            raise ValueError("invalid header")
 
-    def read_tail(
-            headers: Tuple[str, str],
-            file_obj: TextIO) -> Head_Body:
-        return (
-            headers,
-            (next_line.split() for next_line in file_obj)
-        )
+    def read_tail(headers: tuple[str, str], file_obj: TextIO) -> Head_Body:
+        return (headers, (next_line.split() for next_line in file_obj))
 
     return read_tail(*read_head(file_obj))
 
-# from collections import namedtuple
-# Color = namedtuple("Color", ("red", "green", "blue", "name"))
 
+#
+# Head_Body = Tuple[Tuple[str, str], Iterator[List[str]]]
+# def row_iter_gpl(file_obj: TextIO) -> Head_Body:
+#     header_pat = re.compile(
+#         r"GIMP Palette\nName:\s*(.*?)\nColumns:\s*(.*?)\n#\n",
+#         re.M)
+#
+#     def read_head(
+#             file_obj: TextIO
+#         ) -> Tuple[Tuple[str, str], TextIO]:
+#         match = header_pat.match("".join(file_obj.readline() for _ in range(4)))
+#         return (match.group(1), match.group(2)), file_obj
+#
+#     def read_tail(
+#             headers: Tuple[str, str],
+#             file_obj: TextIO) -> Head_Body:
+#         return (
+#             headers,
+#             (next_line.split() for next_line in file_obj)
+#         )
+#
+#     return read_tail(*read_head(file_obj))
+
+
+def test_row_iter_gpl() -> None:
+    from pathlib import Path
+
+    source_path = Path("crayola.gpl")
+    with source_path.open() as source:
+        (name, columns), text_iter = row_iter_gpl(source)
+        text = list(text_iter)
+    assert name == "Crayola"
+    assert columns == "16"
+    assert len(text) == 133
+    assert text[0] == ["239", "222", "205", "Almond"]
+    assert text[-1] == ["255", "174", "66", "Yellow", "Orange"]
+
+
+from collections.abc import Iterator
 from typing import NamedTuple
+
+
 class Color(NamedTuple):
     red: int
     blue: int
     green: int
     name: str
 
+
 def color_palette(
-        headers: Tuple[str, str],
-        row_iter: Iterator[List[str]]
-    ) -> Tuple[str, str, Tuple[Color, ...]]:
+    headers: tuple[str, str], row_iter: Iterator[list[str]]
+) -> tuple[str, str, tuple[Color, ...]]:
     name, columns = headers
     colors = tuple(
-        Color(int(r), int(g), int(b), " ".join(name))
-        for r, g, b, *name in row_iter)
+        Color(int(r), int(g), int(b), " ".join(name)) for r, g, b, *name in row_iter
+    )
     return name, columns, colors
 
-test_row_iter_gpl = """
->>> with open("crayola.gpl") as source:
-...     name, columns, colors = color_palette( *row_iter_gpl(source) )
+
+# from collections import namedtuple
+# Color = namedtuple("Color", ("red", "green", "blue", "name"))
+#
+# from typing import NamedTuple
+# class Color(NamedTuple):
+#     red: int
+#     blue: int
+#     green: int
+#     name: str
+#
+# def color_palette(
+#         headers: Tuple[str, str],
+#         row_iter: Iterator[List[str]]
+#     ) -> Tuple[str, str, Tuple[Color, ...]]:
+#     name, columns = headers
+#     colors = tuple(
+#         Color(int(r), int(g), int(b), " ".join(name))
+#         for r, g, b, *name in row_iter)
+#     return name, columns, colors
+
+
+def test_color_palette() -> None:
+    from pathlib import Path
+
+    source_path = Path("crayola.gpl")
+    with source_path.open() as source:
+        name, columns, colors = color_palette(*row_iter_gpl(source))
+    assert name == "Crayola"
+    assert columns == "16"
+    assert len(colors) == 133
+    assert colors[0] == Color(red=239, blue=222, green=205, name="Almond")
+    assert colors[-1] == Color(red=255, blue=174, green=66, name="Yellow Orange")
+
+
+REPL_color_palette = """
+>>> from pathlib import Path
+>>> source_path = Path("crayola.gpl")
+>>> with source_path.open() as source:
+...     name, cols, colors = color_palette(
+...         *row_iter_gpl(source)
+...     )
 >>> name
 'Crayola'
->>> columns
+>>> cols
 '16'
 >>> len(colors)
 133
 """
 
-__test__ = {
-    "test_float_lan_lon3": test_float_lan_lon3,
-    "test_row_iter_kml": test_row_iter_kml,
-    "test_row_iter_gpl": test_row_iter_gpl,
-}
-
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
-
-if __name__ == "__main__":
-    test()
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}

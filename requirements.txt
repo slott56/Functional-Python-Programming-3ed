@@ -1,0 +1,11 @@
+pillow==8.4.0
+beautifulsoup4==4.10.0
+pymonad==2.4.0
+pytoolz==0.1.7
+pyrsistent==0.18.1
+mypy_extensions==0.4.3
+black==19.10b0
+tox==3.24.5
+# Helpful to have these match tox.ini
+pytest==6.2.4
+mypy==0.931
