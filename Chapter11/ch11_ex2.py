@@ -1,50 +1,60 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 11, Example Set 2
 """
-# pylint: disable=missing-docstring,wrong-import-position,reimported
-from functools import wraps
 
-def comp(func1):
-    def abstract_decorator(func2):
-        @wraps(func2)
-        def composite(*args, **kw):
-            return func1(func2(*args, **kw))
-        return composite
-    return abstract_decorator
+from typing import Match, Pattern
 
-def minus1(y):
-    return y-1
 
-@comp(minus1)
-def pow2(x):
-    return 2**x
+def matcher(text: str, *patterns: Pattern[str]) -> Match[str] | None:
+    matching = (p.search(text) for p in patterns)
+    try:
+        good = next(filter(None, matching))
+        return good
+    except StopIteration:
+        pass
+    return None
 
-example_1 = """
->>> pow2(17)
-131071
+
+#
+# from typing import Optional, Match
+# def matcher(text: str) -> Optional[Match[str]]:
+#     patterns = [p1, p2]
+#     matching = (p.search(text) for p in patterns)
+#     try:
+#         good = next(filter(None, matching))
+#         return good
+#     except StopIteration:
+#         pass
+#     return None
+
+REPL_matcher = """
+>>> import re
+>>> p1 = re.compile(r"(\w+) text")
+>>> p2 = re.compile(r"perhaps (\w+) text")
+
+>>> matcher("some text", p1, p2)
+<re.Match object; span=(0, 9), match='some text'>
+ 
 """
 
-from typing import Callable
-m1: Callable[[float], float] = lambda x: x-1
-p2: Callable[[float], float] = lambda y: 2**y
-mersenne: Callable[[float], float] = lambda x: m1(p2(x))
 
-F_float = Callable[[float], float]
+def test_matcher() -> None:
+    import re
 
-example_2 = """
->>> mersenne(17)
-131071
-"""
+    p1 = re.compile(r"(\w+) text")
+    p2 = re.compile(r"perhaps (\w+) content")
 
-__test__ = {
-    'example_1': example_1,
-}
+    text_1 = "some text"
+    m_1 = matcher(text_1, p1, p2)
+    assert m_1 and m_1.string == text_1
 
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
+    m_2 = matcher("nothing", p1, p2)
+    assert m_2 is None
 
-if __name__ == "__main__":
-    test()
+    text_3 = "perhaps more content"
+    m_3 = matcher(text_3, p1, p2)
+    assert m_3 and m_3.string == text_3
+
+
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}

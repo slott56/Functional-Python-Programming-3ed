@@ -7,7 +7,6 @@ An example of an optimization problem:
 https://www.me.utexas.edu/~jensen/ORMM/models/unit/combinatorics/permute.html
 
 """
-# pylint: disable=wildcard-import,unused-wildcard-import,wrong-import-position
 
 import csv
 import io

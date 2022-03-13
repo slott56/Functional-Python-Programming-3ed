@@ -1,3 +1,10 @@
+# Python Caches
+.mypy_cache/
+.pytest_cache/
+.tox/
+*.pyc
+*/__pycache__/
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db

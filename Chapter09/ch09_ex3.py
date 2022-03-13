@@ -16,7 +16,7 @@ import urllib.request
 from collections.abc import Iterator
 
 
-def data_iter_html(url: str) -> Iterator[str]:
+def html_data_iter(url: str) -> Iterator[str]:
     with urllib.request.urlopen(url) as page:
         soup = BeautifulSoup(page.read(), "html.parser")
         data = soup.html.body.table.table
@@ -227,10 +227,10 @@ def test_convert() -> None:
 
 
 # Raw data from the internet
-# s7 = list(data_iter_html( "http://www.tylervigen.com/view_correlation?id=7" ))
-# s3890 = list(data_iter_html( "http://www.tylervigen.com/view_correlation?id=3890" ))
-# s97 = list(data_iter_html( "http://www.tylervigen.com/view_correlation?id=97" ))
-# s43 = list(data_iter_html( "http://www.tylervigen.com/view_correlation?id=43" ))
+# s7 = list(html_data_iter( "http://www.tylervigen.com/view_correlation?id=7" ))
+# s3890 = list(html_data_iter( "http://www.tylervigen.com/view_correlation?id=3890" ))
+# s97 = list(html_data_iter( "http://www.tylervigen.com/view_correlation?id=97" ))
+# s43 = list(html_data_iter( "http://www.tylervigen.com/view_correlation?id=43" ))
 
 # Saves some download and HTML parse bandwidth
 s7 = [

@@ -1,303 +1,355 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 11, Example Set 1
 """
-# pylint: disable=missing-docstring,wrong-import-position,reimported
 
-import math
+from typing import Iterable
+from functools import reduce
 
-from functools import wraps
-from typing import Callable, Optional, Any, TypeVar, cast
 
-FuncType = Callable[..., Any]
-F = TypeVar('F', bound=FuncType)
+def prod(data: Iterable[int]) -> int:
+    """
+    >>> prod((1,2,3))
+    6
+    """
+    return reduce(lambda x, y: x * y, data, 1)
 
-def nullable(function: F) -> F:
-    @wraps(function)
-    def null_wrapper(arg: Optional[Any]) -> Optional[Any]:
-        return None if arg is None else function(arg)
-    return cast(F, null_wrapper)
 
-@nullable
-def nlog(x: Optional[float]) -> Optional[float]:
-    return math.log(x)
+year_cheese = [
+    (2000, 29.87),
+    (2001, 30.12),
+    (2002, 30.6),
+    (2003, 30.66),
+    (2004, 31.33),
+    (2005, 32.62),
+    (2006, 32.73),
+    (2007, 33.5),
+    (2008, 32.84),
+    (2009, 33.02),
+    (2010, 32.92),
+]
 
-# reveal_type(math.log)
-# reveal_type(nlog)
+from collections.abc import Callable, Sequence
+from typing import TypeVar
 
-@nullable
-def nround4(x: Optional[float]) -> Optional[float]:
-    return round(x, 4)
+T = TypeVar("T")
+fst: Callable[[Sequence[T]], T] = lambda x: x[0]
+snd: Callable[[Sequence[T]], T] = lambda x: x[1]
+#
+# from typing import Callable, Sequence, TypeVar
+# T_ = TypeVar("T_")
+# fst: Callable[[Sequence[T_]], T_] = lambda x: x[0]
+# snd: Callable[[Sequence[T_]], T_] = lambda x: x[1]
 
-test_Null_Log = """
->>> nlog = nullable( math.log )
->>> some_data = [ 10, 100, None, 50, 60 ]
->>> scaled = map( nlog, some_data )
->>> [nround4(v) for v in scaled]
-[2.3026, 4.6052, None, 3.912, 4.0943]
+
+REPL_itemgetter = """
+>>> from operator import itemgetter
+>>> itemgetter(0)([1, 2, 3])
+1
+
+>>> from operator import itemgetter
+>>> itemgetter(0)([1, 2, 3])
+1
+
+>>> year_cheese = [
+...     (2000, 29.87), (2001, 30.12), (2002, 30.6), (2003, 30.66),
+...     (2004, 31.33), (2005, 32.62), (2006, 32.73), (2007, 33.5),
+...     (2008, 32.84), (2009, 33.02), (2010, 32.92)
+... ]
+
+>>> min(year_cheese, key=snd)
+(2000, 29.87)
+>>> max(year_cheese, key=itemgetter(1))
+(2007, 33.5)
+
+>>> min(year_cheese, key=snd)
+(2000, 29.87)
+
+>>> from operator import itemgetter
+>>> max(year_cheese, key=itemgetter(1))
+(2007, 33.5)
 """
 
-nlog = nullable(math.log)
-nround4l: Callable[[Optional[float]], Optional[float]] = (
-    nullable(lambda x: round(x, 4))
-)
+from typing import NamedTuple
 
-test_Null_Log2 = """
->>> some_data = [ 10, 100, None, 50, 60 ]
->>> scaled = map( nlog, some_data )
->>> [nround4l(v) for v in scaled]
-[2.3026, 4.6052, None, 3.912, 4.0943]
+
+class YearCheese(NamedTuple):
+    year: int
+    cheese: float
+
+
+#
+# from typing import NamedTuple
+# class YearCheese(NamedTuple):
+#     year: int
+#     cheese: float
+
+REPL_year_cheese = """
+>>> year_cheese_2 = list(YearCheese(*yc) for yc in year_cheese)
+
+>>> year_cheese_2 = list(YearCheese(*yc) for yc in year_cheese)
+
+>>> from operator import attrgetter
+>>> min(year_cheese_2, key=attrgetter('cheese'))
+YearCheese(year=2000, cheese=29.87)
+
+>>> max(year_cheese_2, key=lambda x: x.cheese)
+YearCheese(year=2007, cheese=33.5)
+
+>>> year_cheese_2  # doctest: +NORMALIZE_WHITESPACE
+[YearCheese(year=2000, cheese=29.87), YearCheese(year=2001, cheese=30.12),
+ YearCheese(year=2002, cheese=30.6), YearCheese(year=2003, cheese=30.66),
+ YearCheese(year=2004, cheese=31.33), YearCheese(year=2005, cheese=32.62),
+ YearCheese(year=2006, cheese=32.73), YearCheese(year=2007, cheese=33.5),
+ YearCheese(year=2008, cheese=32.84), YearCheese(year=2009, cheese=33.02),
+ YearCheese(year=2010, cheese=32.92)]
+
+>>> from operator import attrgetter
+>>> min(year_cheese_2, key=attrgetter('cheese'))
+YearCheese(year=2000, cheese=29.87)
+>>> max(year_cheese_2, key=lambda x: x.cheese )
+YearCheese(year=2007, cheese=33.5)
 """
 
-def null2(function: F) -> F:
-    @wraps(function)
-    def null_wrapper(*arg, **kw):
-        try:
-            return function(*arg, **kw)
-        except TypeError as e:
-            if 'NoneType' in e.args[0]:
-                return None
-            raise
-    return cast(F, null_wrapper)
+g_f = [
+    1,
+    1 / 12,
+    1 / 288,
+    -139 / 51840,
+    -571 / 2488320,
+    163879 / 209018880,
+    5246819 / 75246796800,
+]
 
-test_null2 = """
->>> ndivmod= null2( divmod )
->>> ndivmod( None, 2 )
->>> ndivmod( 2, None )
->>> try:
-...    ndivmod( "22", "7" )
-... except TypeError as e:
-...    print(e)
-unsupported operand type(s) for divmod(): 'str' and 'str'
+g = [
+    (1, 1),
+    (1, 12),
+    (1, 288),
+    (-139, 51840),
+    (-571, 2488320),
+    (163879, 209018880),
+    (5246819, 75246796800),
+]
+
+
+REPL_starmap1 = """
+>>> from itertools import starmap
+>>> from fractions import Fraction
+>>> from operator import truediv
+
+>>> round(sum(starmap(truediv, g)), 6)
+1.084749
+>>> round(sum(g_f), 6)
+1.084749
+>>> f = sum(Fraction(*x) for x in g)
+>>> f
+Fraction(81623851739, 75246796800)
+>>> round(float(f), 6)
+1.084749
 """
 
-import logging
-def logged(function: F) -> F:
-    @wraps(function)
-    def log_wrapper(*args, **kw):
-        log = logging.getLogger(function.__qualname__)
-        try:
-            result = function(*args, **kw)
-            log.info("(%r %r) => %r", args, kw, result)
-        except Exception:
-            log.exception("(%r %r)", args, kw)
-            raise
-    return cast(F, log_wrapper)
-
-test_logged_divmod = """
->>> import sys
->>> ldivmod= logged(divmod)
->>> logging.basicConfig( stream=sys.stdout, level=logging.INFO )
->>> try: # doctest: +ELLIPSIS
-...    ldivmod( 3, None )
-... except Exception:
-...    pass
-ERROR:divmod:((3, None) {})
-Traceback (most recent call last):
-...
-TypeError: unsupported operand type(s) for divmod(): 'int' and 'NoneType'
->>> ldivmod( 22, 7 )
-INFO:divmod:((22, 7) {}) => (3, 1)
+REPL_starmap_d = """
+>>> from itertools import starmap, zip_longest
+>>> d = starmap(pow, zip_longest([], range(4), fillvalue=60))
+>>> list(d)
+[1, 60, 3600, 216000]
 """
 
-import decimal
-def bad_data(function: F) -> F:
-    @wraps(function)
-    def wrap_bad_data(text: str, *args: Any, **kw: Any) -> Any:
-        try:
-            return function(text, *args, **kw)
-        except (ValueError, decimal.InvalidOperation):
-            cleaned = text.replace(",", "")
-            return function(cleaned, *args, **kw)
-    return cast(F, wrap_bad_data)
+REPL_starmap2 = """
+>>> from operator import truediv
+>>> from itertools import starmap, zip_longest
 
-from decimal import Decimal
-bd_int = bad_data(int)
-bd_float = bad_data(float)
-bd_decimal = bad_data(Decimal)
+>>> d = starmap(pow, zip_longest([], range(4), fillvalue=60))
+>>> p = (3, 8, 29, 44)
+>>> pi = sum(starmap(truediv, zip(p, d)))
+>>> pi
+3.1415925925925925
 
-test_bad_data = """
->>> from decimal import Decimal
->>> bd_int( "13" )
-13
->>> bd_int( "1,371" )
-1371
->>> bd_int( "1,371", base=16 )
-4977
->>> bd_float("17")
-17.0
->>> bd_float("1,701")
-1701.0
->>> bd_decimal(19)
-Decimal('19')
->>> bd_decimal("1,956")
-Decimal('1956')
+>>> d = starmap(pow, zip_longest([], range(4), fillvalue=60))
+>>> p = (3, 8, 29, 44)
+>>> pi = sum(starmap(truediv, zip(p, d)))
+>>> pi
+3.1415925925925925
+
+>>> d = starmap(pow, zip_longest([], range(4), fillvalue=60))
+>>> pi = sum(map(truediv, p, d))
+>>> pi
+3.1415925925925925
+
+>>> d = starmap(pow, zip_longest([], range(4), fillvalue=60))
+>>> pi = sum(map(truediv, p, d))
+>>> pi
+3.1415925925925925
 """
 
-from typing import Tuple
-def clean_list(text: str, char_list: Tuple[str, ...]) -> str:
-    if char_list:
-        return clean_list(text.replace(char_list[0], ""), char_list[1:])
-    return text
 
-import decimal
-def bad_char_remove(*char_list: str) -> Callable[[F], F]:
-    def cr_decorator(function: F) -> F:
-        @wraps(function)
-        def wrap_char_remove(text, *args, **kw):
-            try:
-                return function(text, *args, **kw)
-            except (ValueError, decimal.InvalidOperation):
-                cleaned = clean_list(text, char_list)
-                return function(cleaned, *args, **kw)
-        return cast(F, wrap_char_remove)
-    return cr_decorator
+REPL_starmap3 = """
+>>> from itertools import starmap
+>>> from itertools import count, takewhile
+>>> from operator import truediv
 
-from decimal import Decimal
-@bad_char_remove("$", ",")
-def currency(text: str, **kw) -> Decimal:
-    return Decimal(text, **kw)
+>>> from itertools import count, takewhile
+>>> num = map(fact, count())
+>>> den = map(semifact, (2*n+1 for n in count()))
 
-test_bad_char_remove = """
->>> currency( "13" )
-Decimal('13')
->>> currency( "$3.14" )
-Decimal('3.14')
->>> currency( "$1,701.00" )
-Decimal('1701.00')
+>>> terms = takewhile(
+... lambda t: t > 1E-10, map(truediv, num, den))
+
+>>> round(float(2*sum(terms)), 8)
+3.14159265
+
+>>> num = map(fact, count())
+>>> den = map(semifact, (2*n+1 for n in count()))
+>>> terms = takewhile(
+...     lambda t: t > 1E-10, map(truediv, num, den))
+>>> round(float(2*sum(terms)), 8)
+3.14159265
 """
 
-# WHY WE DON'T DO THIS!!
-# The type signatures are a mess.
 
-CF = TypeVar('CF', bound=FuncType)
+from collections.abc import Callable
 
-def then_convert(convert_function: CF) -> Callable[[Callable], CF]:
-    def abstract_decorator(clean_func: F) -> F:
-        @wraps(clean_func)
-        def cc_wrapper(text: str, *args, **kw) -> Any:
-            try:
-                return convert_function(text, *args, **kw)
-            except (ValueError, decimal.InvalidOperation):
-                cleaned = clean_func(text)
-                return convert_function(cleaned, *args, **kw)
-        return cast(F, cc_wrapper)
-    return cast(Callable[[Callable], CF], abstract_decorator)
 
-@then_convert(int)
-def drop_punct(text):  # Callable[[str], str] is Not the *real* signature!
-    return text.replace(",", "").replace("$", "")
+def fact(n: int) -> int:
+    f: Callable[[int], int] = {
+        n == 0: lambda n: 1,
+        n == 1: lambda n: 1,
+        n == 2: lambda n: 2,
+        n > 2: lambda n: fact(n - 1) * n,
+    }[True]
+    return f(n)
 
-# reveal_type(drop_punct)
 
-test_then_convert_1 = """
->>> drop_punct("1,701")
-1701
->>> drop_punct("97")
-97
->>>
+#
+# def fact(n: int) -> int:
+#     f = {
+#         n == 0: lambda n: 1,
+#         n == 1: lambda n: 1,
+#         n == 2: lambda n: 2,
+#         n > 2: lambda n: fact(n-1)*n
+#     }[True]
+#     return f(n)
+
+
+def test_fact() -> None:
+    assert fact(0) == 1
+    assert fact(1) == 1
+    assert fact(2) == 2
+    assert fact(3) == 6
+    assert fact(4) == 24
+
+
+from collections.abc import Callable
+from operator import itemgetter
+
+
+def semifact(n: int) -> int:
+    alternatives: list[tuple[bool, Callable[[int], int]]] = [
+        (n == 0, lambda n: 1),
+        (n == 1, lambda n: 1),
+        (n == 2, lambda n: 2),
+        (n > 2, lambda n: semifact(n - 2) * n),
+    ]
+    _, f = next(filter(itemgetter(0), alternatives))
+    return f(n)
+
+
+#
+# from collections.abc import Callable
+# from operator import itemgetter
+#
+# def semifact(n: int) -> int:
+#     alternatives: List[Tuple[bool, Callable[[int], int]]] = [
+#         (n == 0, lambda n: 1),
+#         (n == 1, lambda n: 1),
+#         (n == 2, lambda n: 2),
+#         (n > 2, lambda n: semifact(n-2)*n)
+#     ]
+#     _, f = next(filter(itemgetter(0), alternatives))
+#     return f(n)
+
+
+def test_semifact() -> None:
+    assert semifact(0) == 1
+    assert semifact(1) == 1
+    assert semifact(2) == 2
+    assert semifact(3) == 3
+    assert semifact(4) == 8
+    assert semifact(5) == 15
+    assert semifact(9) == 945
+
+
+def semifact2(n: int) -> int:
+    alternatives: list[Callable[[int], int] | None] = [
+        (lambda n: 1) if n == 0 else None,
+        (lambda n: 1) if n == 1 else None,
+        (lambda n: 2) if n == 2 else None,
+        (lambda n: semifact2(n - 2) * n) if n > 2 else None,
+    ]
+    f = next(filter(None, alternatives))
+    return f(n)
+
+
+def test_semifact2() -> None:
+    assert semifact2(9) == 945
+
+
+from typing import Protocol, TypeVar, Any
+
+
+class Comparable(Protocol):
+    def __lt__(self, __other: Any) -> bool:
+        ...
+
+    def __gt__(self, __other: Any) -> bool:
+        ...
+
+    def __le__(self, __other: Any) -> bool:
+        ...
+
+    def __ge__(self, __other: Any) -> bool:
+        ...
+
+
+SupportsRichComparisonT = TypeVar("SupportsRichComparisonT", bound=Comparable)
+
+
+def non_strict_max(
+    a: SupportsRichComparisonT, b: SupportsRichComparisonT
+) -> SupportsRichComparisonT:
+    f: Callable[[], SupportsRichComparisonT] = {a >= b: lambda: a, b >= a: lambda: b}[
+        True
+    ]
+    return f()
+
+
+def test_non_strict_max() -> None:
+    assert non_strict_max(2, 2) == 2
+    assert non_strict_max(3, 5) == 5
+    assert non_strict_max(11, 7) == 11
+
+
+REPL_reduction = """
+>>> import functools, operator
+>>> sum=  functools.partial( functools.reduce, operator.add )
+>>> sum([1,2,3])
+6
+>>> prod = functools.partial( functools.reduce, operator.mul )
+>>> prod( [1,2,3,4] )
+24
+>>> fact = lambda n: 1 if n < 2 else n*prod( range(1,n) )
+>>> fact(4)
+24
+>>> fact(0)
+1
+>>> fact(1)
+1
 """
 
-test_then_convert_2 = """
->>> def drop_punct(text):
-...    return text.replace(",", "").replace("$", "")
->>> drop_punct_int = then_convert(int)(drop_punct)
->>> drop_punct_int("1,701")
-1701
->>> drop_punct_int("97")
-97
->>>
+REPL_unordered = """
+>>> {'a': 1, 'a': 2}
+{'a': 2}
 """
 
-# Much nicer
 
-def cleanse_before(
-        cleanse_function: Callable
-    ) -> Callable[[F], F]:
-    def abstract_decorator(converter: F) -> F:
-        @wraps(converter)
-        def cc_wrapper(text: str, *args, **kw) -> Any:
-            try:
-                return converter(text, *args, **kw)
-            except (ValueError, decimal.InvalidOperation):
-                cleaned = cleanse_function(text)
-                return converter(cleaned, *args, **kw)
-        return cast(F, cc_wrapper)
-    return abstract_decorator
-
-def drop_punct2(text: str) -> str:
-    return text.replace(",", "").replace("$", "")
-
-@cleanse_before(drop_punct)
-def to_int(text: str, base: int = 10) -> int:
-    return int(text, base)
-
-to_int2 = cleanse_before(drop_punct)(int)
-
-# reveal_type(to_int)
-# reveal_type(to_int2)
-# reveal_type(int)
-
-test_cleanse_before = """
->>> to_int("1,701")
-1701
->>> to_int("97")
-97
->>> to_int2("1,701")
-1701
->>> to_int2("97")
-97
-"""
-
-def normalize(mean, stdev):
-    z_score = lambda x: (x-mean)/stdev
-    def concrete_decorator(function):
-        @wraps(function)
-        def wrapped(data_arg):
-            z = map(z_score, data_arg)
-            return function(z)
-        return wrapped
-    return concrete_decorator
-
-test_normalize = """
->>> d = [ 2, 4, 4, 4, 5, 5, 7, 9 ]
->>> from Chapter04.ch04_ex4 import mean, stdev
->>> m_d, s_d =  mean(d), stdev(d)
->>> @normalize(m_d, s_d)
-... def norm_list(d):
-...    return list(d)
->>> norm_list(d)
-[-1.5, -0.5, -0.5, -0.5, 0.0, 0.0, 1.0, 2.0]
->>> z = lambda x, m, s: (x-m)/s
->>> list( z( x, mean(d), stdev(d) ) for x in d )
-[-1.5, -0.5, -0.5, -0.5, 0.0, 0.0, 1.0, 2.0]
-
->>> @normalize(m_d, s_d)
-... def norm_sum(d):
-...      return sum(d)
->>> norm_sum(d)
-0.0
-
-"""
-
-__test__ = {
-    "test_Null_Log": test_Null_Log,
-    "test_Null_Log2": test_Null_Log2,
-    "test_null2": test_null2,
-    "test_logged_divmod": test_logged_divmod,
-    "test_bad_data": test_bad_data,
-    "test_bad_char_remove": test_bad_char_remove,
-    "test_then_convert_1": test_then_convert_1,
-    "test_then_convert_2": test_then_convert_2,
-    "test_normalize": test_normalize,
-}
-
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
-
-if __name__ == "__main__":
-    print(bd_int("1,371", base=16))
-    test()
-    #performace()
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}
