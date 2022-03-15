@@ -21,18 +21,6 @@ def nullable(function: FT) -> FT:
     return cast(FT, null_wrapper)
 
 
-# from functools import wraps
-# from typing import Callable, Optional, Any, TypeVar, cast
-#
-# FuncType = Callable[..., Any]
-# F = TypeVar('F', bound=FuncType)
-#
-# def nullable(function: F) -> F:
-#     @wraps(function)
-#     def null_wrapper(arg: Optional[Any]) -> Optional[Any]:
-#         return None if arg is None else function(arg)
-#     return cast(F, null_wrapper)
-
 import math
 
 
@@ -55,10 +43,6 @@ REPL_st_miles = """
 def nround4(x: Optional[float]) -> Optional[float]:
     return round(cast(float, x), 4)
 
-
-# @nullable
-# def nround4(x: Optional[float]) -> Optional[float]:
-#     return round(x, 4)
 
 REPL_st_miles_nround4 = """
 >>> some_data = [8.7, 86.9, None, 43.4, 60]
@@ -153,27 +137,11 @@ def bad_data(function: DFT) -> DFT:
     return cast(DFT, wrap_bad_data)
 
 
-#
-# import decimal
-# def bad_data(function: F) -> F:
-#     @wraps(function)
-#     def wrap_bad_data(text: str, *args: Any, **kw: Any) -> Any:
-#         try:
-#             return function(text, *args, **kw)
-#         except (ValueError, decimal.InvalidOperation):
-#             cleaned = text.replace(",", "")
-#             return function(cleaned, *args, **kw)
-#     return cast(F, wrap_bad_data)
-
 from decimal import Decimal
 
 bd_int = bad_data(int)
 bd_float = bad_data(float)
 bd_decimal = bad_data(Decimal)
-# from decimal import Decimal
-# bd_int = bad_data(int)
-# bd_float = bad_data(float)
-# bd_decimal = bad_data(Decimal)
 
 REPL_bad_data = """
 >>> bd_int("13")
@@ -207,12 +175,6 @@ def clean_list(text: str, char_list: tuple[str, ...]) -> str:
     return text
 
 
-#
-# def clean_list(text: str, char_list: tuple[str, ...]) -> str:
-#     if char_list:
-#         return clean_list(text.replace(char_list[0], ""), char_list[1:])
-#     return text
-
 import decimal
 
 
@@ -231,19 +193,6 @@ def bad_char_remove(*char_list: str) -> Callable[[FT], FT]:
     return cr_decorator
 
 
-# import decimal
-# def bad_char_remove(*char_list: str) -> Callable[[F], F]:
-#     def cr_decorator(function: F) -> F:
-#         @wraps(function)
-#         def wrap_char_remove(text, *args, **kw):
-#             try:
-#                 return function(text, *args, **kw)
-#             except (ValueError, decimal.InvalidOperation):
-#                 cleaned = clean_list(text, char_list)
-#                 return function(cleaned, *args, **kw)
-#         return cast(F, wrap_char_remove)
-#     return cr_decorator
-
 from decimal import Decimal
 
 
@@ -251,11 +200,6 @@ from decimal import Decimal
 def currency(text: str, **kw: Any) -> Decimal:
     return Decimal(text, **kw)
 
-
-# from decimal import Decimal
-# @bad_char_remove("$", ",")
-# def currency(text: str, **kw) -> Decimal:
-#     return Decimal(text, **kw)
 
 REPL_bad_char_remove = """
 >>> currency("13")
@@ -339,22 +283,6 @@ def cleanse_before(cleanse_function: Callable[[str], Any]) -> Callable[[FT], FT]
     return concrete_decorator
 
 
-#
-# def cleanse_before(
-#         cleanse_function: Callable
-#     ) -> Callable[[F], F]:
-#     def abstract_decorator(converter: F) -> F:
-#         @wraps(converter)
-#         def cc_wrapper(text: str, *args, **kw) -> Any:
-#             try:
-#                 return converter(text, *args, **kw)
-#             except (ValueError, decimal.InvalidOperation):
-#                 cleaned = cleanse_function(text)
-#                 return converter(cleaned, *args, **kw)
-#         return cast(F, cc_wrapper)
-#     return abstract_decorator
-
-
 def drop_punct2(text: str) -> str:
     return text.replace(",", "").replace("$", "")
 
@@ -364,15 +292,7 @@ def to_int(text: str, base: int = 10) -> int:
     return int(text, base)
 
 
-# def drop_punct2(text: str) -> str:
-#     return text.replace(",", "").replace("$", "")
-#
-# @cleanse_before(drop_punct)
-# def to_int(text: str, base: int = 10) -> int:
-#     return int(text, base)
-
 to_int2 = cleanse_before(drop_punct)(int)
-# to_int2 = cleanse_before(drop_punct)(int)
 
 # reveal_type(to_int)
 # reveal_type(to_int2)

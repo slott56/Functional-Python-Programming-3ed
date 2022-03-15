@@ -1,256 +1,255 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 13, Example Set 1
 """
-# pylint: disable=unused-wildcard-import,wrong-import-position,unused-import
 
-from typing import Iterable
-from functools import reduce
-def prod(data: Iterable[int]) -> int:
-    """
-    >>> prod((1,2,3))
-    6
-    """
-    return reduce(lambda x, y: x*y, data, 1)
-
-year_cheese = [
-    (2000, 29.87), (2001, 30.12), (2002, 30.6), (2003, 30.66),
-    (2004, 31.33), (2005, 32.62), (2006, 32.73), (2007, 33.5),
-    (2008, 32.84), (2009, 33.02), (2010, 32.92)
-]
-
-from typing import Callable, Sequence, TypeVar
-T_ = TypeVar("T_")
-fst: Callable[[Sequence[T_]], T_] = lambda x: x[0]
-snd: Callable[[Sequence[T_]], T_] = lambda x: x[1]
-
-x = min(year_cheese, key=snd)
+from pymonad.tools import curry  # type: ignore[import]
 
 
-test_itemgetter = """
->>> from operator import itemgetter
->>> itemgetter(0)([1, 2, 3])
-1
->>> min(year_cheese, key=snd)
-(2000, 29.87)
->>> max(year_cheese, key=itemgetter(1))
-(2007, 33.5)
+@curry(4)  # type: ignore[misc]
+def systolic_bp(bmi: float, age: float, gender_male: float, treatment: float) -> float:
+    return 68.15 + 0.58 * bmi + 0.65 * age + 0.94 * gender_male + 6.44 * treatment
+
+
+REPL_curry_1 = """
+>>> systolic_bp(25, 50, 1, 0)
+116.09
+
+>>> systolic_bp(25, 50, 0, 1)
+121.59
+
+>>> systolic_bp( 25, 50, 1, 0 )
+116.09
+>>> systolic_bp( 25, 50, 0, 1 )
+121.59
+
+>>> treated = systolic_bp(25, 50, 0)
+>>> treated(0)
+115.15
+>>> treated(1)
+121.59
+>>> treated = systolic_bp( 25, 50, 0 )
+>>> treated(0)
+115.15
+>>> treated(1)
+121.59
+
+>>> g_t = systolic_bp(25, 50)
+>>> g_t(1, 0)
+116.09
+>>> g_t(0, 1)
+121.59
+>>> g_t = systolic_bp( 25, 50 )
+>>> g_t(1, 0)
+116.09
+>>> g_t(0, 1)
+121.59
 """
 
-# from collections import namedtuple
-# YearCheese = namedtuple( "YearCheese", ("year", "cheese") )'
+REPL_curry_2 = """
+>>> from pymonad.tools import curry
+>>> from functools import reduce
 
-from typing import NamedTuple
-class YearCheese(NamedTuple):
-    year: int
-    cheese: float
+>>> creduce = curry(2, reduce)
 
-year_cheese_2 = list(YearCheese(*yc) for yc in year_cheese)
+>>> from operator import add
 
-test_year_cheese_2 = """
->>> year_cheese_2  # doctest: +NORMALIZE_WHITESPACE
-[YearCheese(year=2000, cheese=29.87), YearCheese(year=2001, cheese=30.12),
- YearCheese(year=2002, cheese=30.6), YearCheese(year=2003, cheese=30.66),
- YearCheese(year=2004, cheese=31.33), YearCheese(year=2005, cheese=32.62),
- YearCheese(year=2006, cheese=32.73), YearCheese(year=2007, cheese=33.5),
- YearCheese(year=2008, cheese=32.84), YearCheese(year=2009, cheese=33.02),
- YearCheese(year=2010, cheese=32.92)]
-"""
+>>> my_sum = creduce(add)
+>>> my_sum([1,2,3])
+6
 
-test_attrgetter = """
->>> from operator import attrgetter
->>> min( year_cheese_2, key=attrgetter('cheese') )
-YearCheese(year=2000, cheese=29.87)
->>> max( year_cheese_2, key=lambda x: x.cheese )
-YearCheese(year=2007, cheese=33.5)
-"""
-
-g_f = [
-    1, 1/12, 1/288, -139/51840, -571/2488320, 163879/209018880,
-    5246819/75246796800
-]
-
-g = [
-    (1, 1), (1, 12), (1, 288), (-139, 51840),
-    (-571, 2488320), (163879, 209018880),
-    (5246819, 75246796800)
-]
-
-from itertools import starmap
-
-from fractions import Fraction
-test_starmap1 = """
->>> from operator import truediv
->>> round( sum( starmap( truediv, g ) ), 6 )
-1.084749
->>> round( sum( g_f ), 6 )
-1.084749
->>> f= sum( Fraction(*x) for x in g )
->>> f
-Fraction(81623851739, 75246796800)
->>> round( float(f), 6 )
-1.084749
-"""
-
-from itertools import zip_longest
-
-test_starmap2 = """
->>> from operator import truediv
->>> p = (3, 8, 29, 44)
->>> d = starmap( pow, zip_longest([], range(4), fillvalue=60) )
->>> pi = sum( starmap( truediv, zip( p, d ) ) )
->>> pi
-3.1415925925925925
->>> d = starmap( pow, zip_longest([], range(4), fillvalue=60) )
->>> pi = sum( map( truediv, p, d ) )
->>> pi
-3.1415925925925925
-"""
-
-def fact(n: int) -> int:
-    """
-    >>> fact(0)
-    1
-    >>> fact(1)
-    1
-    >>> fact(2)
-    2
-    >>> fact(3)
-    6
-    >>> fact(4)
-    24
-    """
-    f = {
-        n == 0: lambda n: 1,
-        n == 1: lambda n: 1,
-        n == 2: lambda n: 2,
-        n > 2: lambda n: fact(n-1)*n
-    }[True]
-    return f(n)
-
-from typing import Callable, Tuple, List
-
-from operator import itemgetter
-def semifact(n: int) -> int:
-    """
-    >>> semifact(0)
-    1
-    >>> semifact(1)
-    1
-    >>> semifact(2)
-    2
-    >>> semifact(3)
-    3
-    >>> semifact(4)
-    8
-    >>> semifact(5)
-    15
-    >>> semifact(9)
-    945
-    """
-    alternatives: List[Tuple[bool, Callable[[int], int]]] = [
-        (n == 0, lambda n: 1),
-        (n == 1, lambda n: 1),
-        (n == 2, lambda n: 2),
-        (n > 2, lambda n: semifact(n-2)*n)
-    ]
-    _, f = next(filter(itemgetter(0), alternatives))
-    return f(n)
-
-def semifact2(n: int) -> int:
-    """
-    >>> semifact2(9)
-    945
-    """
-    alternatives = [
-        (lambda n: 1) if n == 0 else None,
-        (lambda n: 1) if n == 1 else None,
-        (lambda n: 2) if n == 2 else None,
-        (lambda n: semifact2(n-2)*n) if n > 2 else None
-    ]
-    f = next(filter(None, alternatives))
-    return f(n)
-
-# Here's a "stub" definition for a class that includes
-# the minimal feature set for comparison.
-# These are often in a module in the `stubs` directory.
-
-from abc import ABCMeta, abstractmethod
-from typing import TypeVar, Any
-
-# pylint: disable=pointless-statement,multiple-statements
-class Rankable(metaclass=ABCMeta):
-    @abstractmethod
-    def __lt__(self, other: Any) -> bool: ...
-    @abstractmethod
-    def __gt__(self, other: Any) -> bool: ...
-    @abstractmethod
-    def __le__(self, other: Any) -> bool: ...
-    @abstractmethod
-    def __ge__(self, other: Any) -> bool: ...
-
-RT = TypeVar('RT', bound=Rankable)
-
-def non_strict_max(a: RT, b: RT) -> RT:
-    """
-    >>> non_strict_max( 2, 2 )
-    2
-    >>> non_strict_max( 3, 5 )
-    5
-    >>> non_strict_max( 11, 7 )
-    11
-    """
-    f = {a >= b: lambda: a, b >= a: lambda: b}[True]
-    return f()
-
-test_starmap3 = """
->>> from itertools import count, takewhile
->>> from operator import truediv
->>> num = map(fact, count())
->>> den = map(semifact, (2*n+1 for n in count()))
->>> terms = takewhile(
-...     lambda t: t > 1E-15, map(truediv, num, den))
->>> round( float(2*sum(terms)), 8 )
-3.14159265
-"""
-
-test_reduction = """
->>> import functools, operator
->>> sum=  functools.partial( functools.reduce, operator.add )
+>>> from operator import *
+>>> sum = creduce(add)
 >>> sum([1,2,3])
 6
->>> prod = functools.partial( functools.reduce, operator.mul )
->>> prod( [1,2,3,4] )
-24
->>> fact = lambda n: 1 if n < 2 else n*prod( range(1,n) )
->>> fact(4)
-24
->>> fact(0)
-1
+
+>>> my_max = creduce(lambda x,y: x if x > y else y)
+>>> my_max([2,5,3])
+5
+
+>>> max = creduce(lambda x,y: x if x > y else y)
+>>> max([2,5,3])
+5
+"""
+
+from pymonad.tools import curry
+from functools import reduce
+
+creduce = curry(2, reduce)
+
+import operator
+
+prod = creduce(operator.mul)
+
+
+from collections.abc import Iterable
+
+
+@curry(1)  # type: ignore[misc]
+def alt_range(n: int) -> Iterable[int]:
+    if n == 0:
+        return range(1, 2)  # Only the value [1]
+    elif n % 2 == 0:
+        return range(2, n + 1, 2)  # Even
+    else:
+        return range(1, n + 1, 2)  # Odd
+
+
+REPL_prod_alt_range = """
+>>> prod(alt_range(9))
+945
+
+>>> from pymonad.reader import Compose
+>>> semi_fact = Compose(alt_range).then(prod)
+>>> semi_fact(9)
+945
+"""
+
+REPL_functor = """
+>>> pi = lambda: 3.14
+>>> pi()
+3.14
+"""
+
+REPL_Maybe = """
+>>> from pymonad.maybe import Maybe, Just, Nothing
+
+>>> x1 = Maybe.apply(systolic_bp).to_arguments(Just(25), Just(50), Just(1), Just(0))
+>>> x1.value
+116.09
+
+>>> x2 = Maybe.apply(systolic_bp).to_arguments(Just(25), Just(50), Just(1), Nothing)
+>>> x2
+Nothing
+>>> x2.value is None
+True
+"""
+
+REPL_ListMonad = """
+>>> list(range(10))
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+>>> from pymonad.list import ListMonad
+>>> ListMonad(range(10))
+[range(0, 10)]
+
+>>> from pymonad.list import ListMonad
+
+>>> x = ListMonad(range(10))
+>>> x
+[range(0, 10)]
+>>> x[0]
+range(0, 10)
+>>> list(x[0])
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+"""
+
+from collections.abc import Iterator
+from pymonad.tools import curry
+
+
+@curry(1)  # type: ignore[misc]
+def range1n(n: int) -> range:
+    if n == 0:
+        return range(1, 2)  # Only the value 1
+    return range(1, n + 1)
+
+
+from pymonad.tools import curry
+
+
+@curry(1)  # type: ignore[misc]
+def n21(n: int) -> int:
+    return 2 * n + 1
+
+
+REPL_composition = """
+>>> from pymonad.reader import Compose
+>>> from pymonad.list import ListMonad
+
+>>> fact = Compose(range1n).then(prod)
+>>> seq1 = ListMonad(*range(20))
+
+>>> f1 = seq1.map(fact)
+>>> f1[:10]
+[1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880]
+
 >>> fact(1)
 1
+>>> fact(2)
+2
+>>> fact(3)
+6
+>>> fact(1)
+1
+
+>>> semi_fact = Compose(alt_range).then(prod)
+>>> f2 = seq1.map(n21).then(semi_fact)
+>>> f2[:10]
+[1, 3, 15, 105, 945, 10395, 135135, 2027025, 34459425, 654729075]
+
+>>> semi_fact(9)
+945
+>>> semi_fact(1)
+1
+>>> semi_fact(2)
+2
+>>> semi_fact(3)
+3
+>>> semi_fact(4)
+8
+>>> semi_fact(5)
+15
+>>> semi_fact(0)
+1
+
+>>> import operator
+>>> 2 * sum(map(operator.truediv, f1, f2))
+3.1415919276751456
 """
 
-test_unordered = """
->>> {'a': 1, 'a': 2}
-{'a': 2}
+REPL_functor = """
+>>> from pymonad.maybe import Maybe, Just, Nothing
+>>> x1 = Maybe.apply(systolic_bp).to_arguments(Just(25), Just(50), Just(1), Just(0))
+>>> x1.value
+116.09
+>>> x2 = Maybe.apply(systolic_bp).to_arguments(Just(25), Just(50), Just(1), Nothing)
+>>> x2.value is None
+True
+
+>>> pi = lambda: 3.14
+>>> pi()
+3.14
 """
 
-__test__ = {
-    "test_itemgetter": test_itemgetter,
-    "test_attrgetter": test_attrgetter,
-    "test_year_cheese_2": test_year_cheese_2,
-    "test_starmap1": test_starmap1,
-    "test_starmap2": test_starmap2,
-    "test_starmap3": test_starmap3,
-    "test_reduction": test_reduction,
-    "test_unordered": test_unordered,
-}
+REPL_functor2 = """
+>>> from pymonad.reader import Compose
+>>> from pymonad.list import ListMonad
 
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
+>>> fact = Compose(range1n).then(prod)
+>>> seq1 = ListMonad(*range(20))
 
-if __name__ == "__main__":
-    test()
+>>> f1 = seq1.map(fact)
+>>> f1[:10]
+[1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880]
+
+>>> semi_fact = Compose(alt_range).then(prod)
+>>> f2 = seq1.map(n21).then(semi_fact)
+>>> f2[:10]
+[1, 3, 15, 105, 945, 10395, 135135, 2027025, 34459425, 654729075]
+
+>>> import operator
+>>> 2 * sum(map(operator.truediv, f1, f2))
+3.1415919276751456
+
+>>> 2*sum(map(operator.truediv, f1, f2))
+3.1415919276751456
+
+>>> from pymonad.maybe import Maybe, Just, Nothing
+>>> r = Just(3).map(fact)
+>>> r
+Just 6
+>>> r.value
+6
+"""
+
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}

@@ -44,14 +44,6 @@ m1: Callable[[float], float] = lambda x: x - 1
 p2: Callable[[float], float] = lambda y: 2 ** y
 mersenne: Callable[[float], float] = lambda x: m1(p2(x))
 
-#
-# from typing import Callable
-# m1: Callable[[float], float] = lambda x: x-1
-# p2: Callable[[float], float] = lambda y: 2**y
-# mersenne: Callable[[float], float] = lambda x: m1(p2(x))
-#
-# F_float = Callable[[float], float]
-
 REPL_example_2 = """
 >>> mersenne(17)
 131071
