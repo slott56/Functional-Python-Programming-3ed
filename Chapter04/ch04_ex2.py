@@ -41,7 +41,6 @@ T_ = TypeVar("T_")
 
 
 def unwrap(dist_leg: tuple[Any, T_]) -> T_:
-    # pylint: disable=unused-variable
     distance, leg = dist_leg
     return leg
 

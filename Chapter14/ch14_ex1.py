@@ -1,186 +1,60 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 14, Example Set 1
 """
-from pymonad import curry, Just, Nothing, List
+import math
 
-@curry
-def systolic_bp(bmi, age, gender_male, treatment):
-    """
-    Example of multiple regression model.
+# $
+#     \Gamma(n) = \sqrt{2 \pi n} \left(\frac{n}{e}\right)^n
+#     \left(
+#       1 +
+#       \frac{1}{(2^1)(6n)^1} +
+#       \frac{1}{(2^3)(6n)^2} +
+#       \frac{-139}{(2^3)(2\times 3\times 5)(6n)^3} +
+#       \frac{-571}{(2^6)(2\times 3\times 5)(6n)^4}
+#     \right)
+# $
 
-    See http://sphweb.bumc.bu.edu/otlt/MPH-Modules/BS/BS704_Multivariable/BS704_Multivariable7.html
+
+def some_function(n: float) -> float:
     """
-    return (
-        68.15+0.58*bmi+0.65*age+0.94*gender_male+6.44*treatment
+    An approximation of the gamma function. A lot of work.
+    """
+    s: float = sum(
+        (
+            1,
+            1 / ((2 ** 1) * (6 * n) ** 1),
+            1 / ((2 ** 3) * (6 * n) ** 2),
+            -139 / ((2 ** 3) * (2 * 3 * 5) * (6 * n) ** 3),
+            -571 / ((2 ** 6) * (2 * 3 * 5) * (6 * n) ** 4),
+        )
+    )
+    gamma: float = math.sqrt(2 * math.pi * n) * (n / math.e) ** n * s
+    return gamma
+
+
+def test_some_function() -> None:
+    assert round(some_function(4), 3) == 24.0
+
+
+def performance() -> None:
+    import dis
+
+    dis.disassemble(some_function.__code__)
+    size = len(some_function.__code__.co_code)
+    print(f"size {size} bytes")
+
+    import timeit
+
+    t = timeit.timeit(
+        """some_function(4)""", """from Chapter14.ch14_ex1 import some_function"""
     )
 
-tests_curry_1 = """
->>> systolic_bp( 25, 50, 1, 0 )
-116.09
->>> systolic_bp( 25, 50, 0, 1 )
-121.59
->>> treated = systolic_bp( 25, 50, 0 )
->>> treated(0)
-115.15
->>> treated(1)
-121.59
->>> g_t= systolic_bp( 25, 50 )
->>> g_t(1, 0)
-116.09
->>> g_t(0, 1)
-121.59
-"""
+    print(f"total time {t:.3f} sec. for 1,000,000 iterations")
+    rate = 1_000_000 * size / t
+    print(f"rate {rate:,.0f} bytecodes/sec")
+    print(f"rate {rate/1_000_000:,.1f} Mbytes/sec")
 
-from collections.abc import Sequence
-
-@curry
-def myreduce(function, iterable_or_sequence):
-    if isinstance(iterable_or_sequence, Sequence):
-        iterator = iter(iterable_or_sequence)
-    else:
-        iterator = iterable_or_sequence
-    s = next(iterator)
-    for v in iterator:
-        s = function(s, v)
-    return s
-
-test_curry_2 = """
->>> from operator import *
->>> sum= myreduce( add )
->>> sum( [1,2,3] )
-6
->>> max= myreduce( lambda x,y: x if x > y else y )
->>> max( [2,5,3] )
-5
-"""
-
-def f(x, *args):
-    def f1(y, *args):
-        def f2(z):
-            return (x+y)*z
-        if args:
-            return f2(*args)
-        return f2
-    if args:
-        return f1(*args)
-    return f1
-
-test_manual_curry = """
->>> f(2)(3)(5)
-25
->>> f(3,5,7)
-56
->>> f(5,7)(9)
-108
-"""
-
-import operator
-
-prod = myreduce(operator.mul)
-
-@curry
-def alt_range(n):
-    if n == 0:
-        return range(1, 2)  # Only 1
-    elif n % 2 == 0:
-        return range(2, n+1, 2)
-    else:
-        return range(1, n+1, 2)
-
-@curry
-def range1n(n):
-    if n == 0:
-        return range(1, 2)  # Only 1
-    return range(1, n+1)
-
-test_composition = """
->>> semi_fact= prod * alt_range
->>> semi_fact(9)
-945
->>> semi_fact(1)
-1
->>> semi_fact(2)
-2
->>> semi_fact(3)
-3
->>> semi_fact(4)
-8
->>> semi_fact(5)
-15
->>> fact= prod * range1n
->>> fact(1)
-1
->>> fact(2)
-2
->>> fact(3)
-6
->>> semi_fact(0)
-1
->>> fact(1)
-1
-"""
-
-test_functor = """
->>> x1= systolic_bp * Just(25) & Just(50) & Just(1) & Just(0)
->>> x1.getValue()
-116.09
->>> x2= systolic_bp * Just(25) & Just(50) & Just(1) & Nothing
->>> x2.getValue() is None
-True
-
->>> pi = lambda: 3.14
->>> pi()
-3.14
-"""
-
-@curry
-def n21(n):
-    """
-    >>> n21(0)
-    1
-    >>> n21(1)
-    2
-    """
-    return 2*n+1
-
-test_functor2 = """
->>> fact= prod * range1n
->>> seq1 = List(*range(20))
->>> f1=fact * seq1
->>> f1[:10]
-[1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880]
-
->>> semi_fact= prod * alt_range
->>> f2=semi_fact * n21 * seq1
->>> f2[:10]
-[1, 3, 15, 105, 945, 10395, 135135, 2027025, 34459425, 654729075]
-
->>> 2*sum(map( operator.truediv, f1, f2 ))
-3.1415919276751456
-"""
-
-test_bind = """
->>> fact= prod * range1n
->>> r= Just(3) >> Just * fact
->>> r.getValue()
-6
-"""
-
-__test__ = {
-    "tests_curry_1": tests_curry_1,
-    "test_curry_2": test_curry_2,
-    "test_manual_curry": test_manual_curry,
-    "test_composition": test_composition,
-    "test_functor": test_functor,
-    "test_functor2": test_functor2,
-    "test_bind": test_bind,
-}
-
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
 
 if __name__ == "__main__":
-    test()
+    performance()

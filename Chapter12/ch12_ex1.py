@@ -7,26 +7,24 @@ import pytest
 
 from collections.abc import Callable
 from functools import wraps
-from typing import Optional, Any, TypeVar, cast
-
-FuncType = Callable[..., Any]
-FT = TypeVar("FT", bound=FuncType)
 
 
-def nullable(function: FT) -> FT:
+def nullable(
+    function: Callable[[float], float]
+) -> Callable[[float | None], float | None]:
     @wraps(function)
-    def null_wrapper(arg: Optional[Any]) -> Optional[Any]:
-        return None if arg is None else function(arg)
+    def null_wrapper(value: float | None) -> float | None:
+        return None if value is None else function(value)
 
-    return cast(FT, null_wrapper)
+    return null_wrapper
 
 
 import math
 
 
 @nullable
-def st_miles(nm: Optional[float]) -> Optional[float]:
-    return 1.15078 * cast(float, nm)
+def st_miles(nm: float) -> float:
+    return 1.15078 * nm
 
 
 # reveal_type(st_miles)
@@ -40,8 +38,8 @@ REPL_st_miles = """
 
 
 @nullable
-def nround4(x: Optional[float]) -> Optional[float]:
-    return round(cast(float, x), 4)
+def nround4(x: float) -> float:
+    return round(x, 4)
 
 
 REPL_st_miles_nround4 = """
@@ -63,78 +61,87 @@ def test_Null_st_miles() -> None:
     assert rounded == [10.0118, 100.0028, None, 49.9439, 69.0468]
 
 
-def null2(function: FT) -> FT:
+from typing import TypeVar, ParamSpec
+
+NT = TypeVar("NT")
+NP = ParamSpec("NP")
+
+
+def null2(function: Callable[NP, NT]) -> Callable[NP, NT | None]:
     @wraps(function)
-    def null_wrapper(*arg: Any, **kw: Any) -> Any | None:
+    def null_wrapper(*args: NP.args, **kwargs: NP.kwargs) -> NT | None:
         try:
-            return function(*arg, **kw)
+            return function(*args, **kwargs)
         except TypeError as e:
             if "NoneType" in e.args[0]:
                 return None
             raise
 
-    return cast(FT, null_wrapper)
+    return null_wrapper
 
 
 def test_null2() -> None:
     """Note that mypy spots several suspicious constructs."""
     ndivmod = null2(divmod)
-    assert ndivmod(None, 2) is None  # type: ignore[misc]
-    assert ndivmod(2, None) is None  # type: ignore[misc]
+    assert ndivmod(None, 2) is None  # type: ignore[arg-type]
+    assert ndivmod(2, None) is None  # type: ignore[arg-type]
     with pytest.raises(TypeError):
-        ndivmod("22", "7")  # type: ignore[call-overload]
+        ndivmod("22", "7")  # type: ignore[arg-type]
 
+
+# Relies on ParamSpec and TypeVar defined earlier.
 
 import logging
 
 
-def logged(function: FT) -> FT:
+def logged(function: Callable[NP, NT]) -> Callable[NP, NT]:
     @wraps(function)
-    def log_wrapper(*args: Any, **kw: Any) -> Any:
+    def log_wrapper(*args: NP.args, **kwargs: NP.kwargs) -> NT:
         log = logging.getLogger(function.__qualname__)
         try:
-            result = function(*args, **kw)
-            log.info("(%r %r) => %r", args, kw, result)
+            result = function(*args, **kwargs)
+            log.info("(%r %r) => %r", args, kwargs, result)
+            return result
         except Exception:
-            log.exception("(%r %r)", args, kw)
+            log.exception("(%r %r)", args, kwargs)
             raise
 
-    return cast(FT, log_wrapper)
+    return log_wrapper
 
 
 def test_logged_divmod_1(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
     ldivmod = logged(divmod)
     with pytest.raises(TypeError):
-        ldivmod(3, None)  # type: ignore[misc]
+        ldivmod(3, None)  # type: ignore[arg-type]
     assert caplog.text.startswith("ERROR    divmod:ch12_ex1.py:")
 
 
 def test_logged_divmod_2(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
     ldivmod = logged(divmod)
-    ldivmod(22, 7)
+    ldivmod(22, 7)  # type: ignore[arg-type]
     assert caplog.text.startswith("INFO     divmod:ch12_ex1.py:")
 
 
-import decimal
 from collections.abc import Callable
-from typing import Any, TypeVar, cast
+import decimal
+from typing import Any, Union, TypeVar
 
-ConversionFunction = Callable[..., Any]
-DFT = TypeVar("DFT", bound=ConversionFunction)
+Number = Union[decimal.Decimal, float]
+NumT = TypeVar("NumT", bound=Number)
 
 
-def bad_data(function: DFT) -> DFT:
+def bad_data(function: Callable[[str], NumT]) -> Callable[[str], NumT]:
     @wraps(function)
-    def wrap_bad_data(text: str, *args: Any, **kw: Any) -> Any:
+    def wrap_bad_data(source: str, **kwargs: Any) -> NumT:
         try:
-            return function(text, *args, **kw)
+            return function(source, **kwargs)
         except (ValueError, decimal.InvalidOperation):
-            cleaned = text.replace(",", "")
-            return function(cleaned, *args, **kw)
+            cleaned = source.replace(",", "")
+            return function(cleaned, **kwargs)
 
-    return cast(DFT, wrap_bad_data)
+    return wrap_bad_data
 
 
 from decimal import Decimal
@@ -168,32 +175,39 @@ Decimal('19')
 Decimal('1956')
 """
 
-
-def clean_list(text: str, char_list: tuple[str, ...]) -> str:
-    if char_list:
-        return clean_list(text.replace(char_list[0], ""), char_list[1:])
-    return text
-
-
+from collections.abc import Callable
 import decimal
+from typing import Any, TypeVar
+
+T = TypeVar("T")
 
 
-def bad_char_remove(*char_list: str) -> Callable[[FT], FT]:
-    def cr_decorator(function: FT) -> FT:
+def bad_char_remove(
+    *char_list: str,
+) -> Callable[[Callable[[str], T]], Callable[[str], T]]:
+    def cr_decorator(function: Callable[[str], T]) -> Callable[[str], T]:
+        def clean_list(text: str, *, char_list: tuple[str, ...]) -> str:
+            if char_list:
+                return clean_list(
+                    text.replace(char_list[0], ""), char_list=char_list[1:]
+                )
+            return text
+
         @wraps(function)
-        def wrap_char_remove(text: str, *args: Any, **kw: Any) -> Any:
+        def wrap_char_remove(text: str, **kwargs: Any) -> T:
             try:
-                return function(text, *args, **kw)
+                return function(text, **kwargs)
             except (ValueError, decimal.InvalidOperation):
-                cleaned = clean_list(text, char_list)
-                return function(cleaned, *args, **kw)
+                cleaned = clean_list(text, char_list=char_list)
+                return function(cleaned, **kwargs)
 
-        return cast(FT, wrap_char_remove)
+        return wrap_char_remove
 
     return cr_decorator
 
 
 from decimal import Decimal
+from typing import Any
 
 
 @bad_char_remove("$", ",")
@@ -218,25 +232,25 @@ Decimal('1701.00')
 """
 
 
-# WHY WE DON'T DO THIS!!
-# The type signatures are a mess.
-
-CF = TypeVar("CF", bound=FuncType)
+# This is limited to only str -> T conversions
+# We can't (easily) fold in KW arguments
 
 
-def then_convert(convert_function: Callable[[str], Any]) -> Callable[[CF], CF]:
-    def abstract_decorator(clean_func: CF) -> CF:
+def then_convert(
+    convert_function: Callable[[str], T]
+) -> Callable[[Callable[[str], str]], Callable[[str], T]]:
+    def concrete_decorator(clean_func: Callable[[str], str]) -> Callable[[str], T]:
         @wraps(clean_func)
-        def cc_wrapper(text: str, *args: Any, **kw: Any) -> Any:
+        def cc_wrapper(text: str) -> T:
             try:
-                return convert_function(text, *args, **kw)
+                return convert_function(text)
             except (ValueError, decimal.InvalidOperation):
                 cleaned = clean_func(text)
-                return convert_function(cleaned, *args, **kw)
+                return convert_function(cleaned)
 
-        return cast(CF, cc_wrapper)
+        return cc_wrapper
 
-    return abstract_decorator
+    return concrete_decorator
 
 
 @then_convert(int)
@@ -267,18 +281,26 @@ REPL_then_convert_2 = """
 
 # Much nicer
 
+from collections.abc import Callable
+from typing import Any, TypeVar
 
-def cleanse_before(cleanse_function: Callable[[str], Any]) -> Callable[[FT], FT]:
-    def concrete_decorator(converter: FT) -> FT:
+# Defined Earlier:
+# T = TypeVar('T')
+
+
+def cleanse_before(
+    cleanse_function: Callable[[str], Any]
+) -> Callable[[Callable[[str], T]], Callable[[str], T]]:
+    def concrete_decorator(converter: Callable[[str], T]) -> Callable[[str], T]:
         @wraps(converter)
-        def cc_wrapper(text: str, *args: Any, **kw: Any) -> Any:
+        def cc_wrapper(text: str, **kwargs: Any) -> T:
             try:
-                return converter(text, *args, **kw)
+                return converter(text, **kwargs)
             except (ValueError, decimal.InvalidOperation):
                 cleaned = cleanse_function(text)
-                return converter(cleaned, *args, **kw)
+                return converter(cleaned, **kwargs)
 
-        return cast(FT, cc_wrapper)
+        return cc_wrapper
 
     return concrete_decorator
 
@@ -310,7 +332,9 @@ REPL_cleanse_before = """
 """
 
 from collections.abc import Iterable, Iterator
+from typing import cast
 
+# Note TypeVar T and ParamSpec P defined above
 FloatFuncT = Callable[..., Iterator[float]]
 FDT = TypeVar("FDT", bound=FloatFuncT)
 

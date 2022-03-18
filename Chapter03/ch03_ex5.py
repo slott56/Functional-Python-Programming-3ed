@@ -192,7 +192,6 @@ def color_GPL_g(file_obj: TextIO) -> Iterator[Color]:
     >>> list(color_GPL_g(data))
     [Color(red=239, green=222, blue=205, name='Almond'), Color(red=205, green=149, blue=117, name='Antique Brass')]
     """
-    # pylint: disable=unused-variable
     name, columns, row_iter = row_iter_gpl(file_obj)
     return (
         Color(int(r), int(g), int(b), " ".join(name)) for r, g, b, *name in row_iter
