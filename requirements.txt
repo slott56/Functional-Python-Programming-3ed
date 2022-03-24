@@ -4,8 +4,11 @@ pymonad==2.4.0
 toolz==0.11.2
 pyrsistent==0.18.1
 rich==11.0.0
+pyyaml==6.0
+types-PyYAML==6.0.5
 mypy_extensions==0.4.3
 black==19.10b0
+flask==2.0.2
 tox==3.24.5
 # Helpful to have these match tox.ini
 pytest==6.2.4

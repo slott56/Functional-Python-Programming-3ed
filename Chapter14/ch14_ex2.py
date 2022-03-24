@@ -4,17 +4,6 @@
 Chapter 14, Example Set 2
 """
 
-# import glob
-# import re
-# import gzip
-# import datetime
-# from collections import namedtuple
-# from typing import NamedTuple
-# import urllib.parse
-# import sys
-# import os
-# import time
-
 # Some sample log lines for testing.
 
 sample = """\
@@ -41,21 +30,6 @@ def local_gzip(zip_path: Path) -> Iterator[str]:
     with gzip.open(zip_path, "rb") as log_file:
         yield from (line.decode("us-ascii").rstrip() for line in log_file)
 
-
-#
-# from typing import Iterator
-# def local_gzip(pattern: str) -> Iterator[Iterator[str]]:
-#     """
-#     Local downloads of gzip log files.
-#     Yields a sequence of iterators over lines, one for each file.
-#     """
-#     zip_logs = glob.glob(pattern)
-#     print("Analyzing", zip_logs)
-#     print()
-#     sys.stdout.flush()
-#     for zip_file in zip_logs:
-#         with gzip.open(zip_file, "rb") as log:
-#             yield (line.decode('us-ascii').rstrip() for line in log)
 
 from collections.abc import Iterator
 import itertools
@@ -87,15 +61,6 @@ def remote_source(**credentials: Any) -> Iterator[str]:
         ftp.quit()
     return itertools.chain.from_iterable(map(local_gzip, downloads))
 
-
-#
-# from typing import Iterator
-# def local_gzip_2(pattern: str) -> Iterator[Iterator[str]]:
-#     def line_iter(zip_file: str) -> Iterator[str]:
-#         """Opens and returns iterator over cleaned lines."""
-#         log = gzip.open(zip_file, "rb")
-#         return (line.decode('us-ascii').rstrip() for line in log)
-#     return map(line_iter, glob.glob(pattern))
 
 import pytest
 
@@ -148,32 +113,6 @@ class Access(NamedTuple):
         return None
 
 
-# format_pat = re.compile(
-#     r"(?P<host>[\d\.]+)\s+"
-#     r"(?P<identity>\S+)\s+"
-#     r"(?P<user>\S+)\s+"
-#     r"\[(?P<time>.+?)\]\s+"
-#     r'"(?P<request>.+?)"\s+'
-#     r"(?P<status>\d+)\s+"
-#     r"(?P<bytes>\S+)\s+"
-#     r'"(?P<referer>.*?)"\s+'  # [SIC]
-#     r'"(?P<user_agent>.+?)"\s*'
-# )
-#
-# from typing import NamedTuple
-# class Access(NamedTuple):
-#     """A line from the log, parsed into strings."""
-#     host: str
-#     identity: str
-#     user: str
-#     time: str
-#     request: str
-#     status: str
-#     bytes: str
-#     referer: str
-#     user_agent: str
-#
-
 from collections.abc import Iterator
 
 
@@ -183,44 +122,9 @@ def access_iter(source_iter: Iterator[str]) -> Iterator[Access]:
             yield access
 
 
-#
-# from typing import Iterator
-# def access_iter(source_iter: Iterator[Iterator[str]]) -> Iterator[Access]:
-#     """
-#     Yields single sequence of Access objects from
-#     a sequence of iterators created by local_gzip() or remote_source()
-#     """
-#     for log in source_iter:
-#         for line in log:
-#             match = format_pat.match(line)
-#             if match:
-#                 yield Access(**match.groupdict())
-
-
 def access_iter_2(source_iter: Iterator[str]) -> Iterator[Access]:
     return filter(None, map(Access.create, source_iter))
 
-
-#
-# from typing import Iterator, Optional
-# def access_iter_2(source_iter: Iterator[Iterator[str]]) -> Iterator[Access]:
-#     """
-#     Yields single sequence of Access objects from
-#     a sequence of iterators created by local_gzip() or remote_source()
-#     """
-#     def access_builder(line: str) -> Optional[Access]:
-#         """Conditionally creates Access object if the line matches."""
-#         match = format_pat.match(line)
-#         if match:
-#             return Access(**match.groupdict())
-#         return None
-#     return filter(
-#         None,
-#         map(
-#             access_builder,
-#             (line for log in source_iter for line in log)
-#         )
-#     )
 
 import itertools
 
@@ -313,25 +217,6 @@ class AccessDetails(NamedTuple):
         )
 
 
-#
-# from typing import NamedTuple, Optional
-# import datetime
-# import urllib.parse
-#
-# class AgentDetails(NamedTuple):
-#     product: str
-#     system: str
-#     platform_details_extensions: str
-#
-# class AccessDetails(NamedTuple):
-#     access: Access
-#     time: datetime.datetime
-#     method: str
-#     url: urllib.parse.ParseResult
-#     protocol: str
-#     referrer: urllib.parse.ParseResult
-#     agent: Optional[AgentDetails]
-
 from typing import Optional
 import datetime
 import re
@@ -358,29 +243,6 @@ def parse_agent(user_agent: str) -> dict[str, str]:
     return {}
 
 
-#
-# from typing import Tuple
-# def parse_request(request: str) -> Tuple[str, str, str]:
-#     words = request.split()
-#     return words[0], ' '.join(words[1:-1]), words[-1]
-#
-# import datetime
-# def parse_time(ts: str) -> datetime.datetime:
-#     return datetime.datetime.strptime(ts, "%d/%b/%Y:%H:%M:%S %z")
-#
-# agent_pat = re.compile(
-#     r"(?P<product>\S*?)\s+"
-#     r"\((?P<system>.*?)\)\s*"
-#     r"(?P<platform_details_extensions>.*)"
-# )
-#
-# from typing import Optional
-# def parse_agent(user_agent: str) -> Optional[AgentDetails]:
-#     agent_match = agent_pat.match(user_agent)
-#     if agent_match:
-#         return AgentDetails(**agent_match.groupdict())
-#     return None
-
 from collections.abc import Iterable, Iterator
 
 
@@ -389,51 +251,11 @@ def access_detail_iter(access_iter: Iterable[Access]) -> Iterator[AccessDetails]
         yield AccessDetails.create(access)
 
 
-#
-# from typing import Iterable, Iterator
-# def access_detail_iter(access_iter: Iterable[Access]) -> Iterator[AccessDetails]:
-#     """Yields AccessDetails wrapped around the original Access objects."""
-#     for access in access_iter:
-#         try:
-#             meth, uri, protocol = parse_request(access.request)
-#             yield AccessDetails(
-#                 access=access,
-#                 time=parse_time(access.time),
-#                 method=meth,
-#                 url=urllib.parse.urlparse(uri),
-#                 protocol=protocol,
-#                 referrer=urllib.parse.urlparse(access.referer),
-#                 agent=parse_agent(access.user_agent)
-#             )
-#         except ValueError as e:
-#             print(e, repr(access))
-
 from collections.abc import Iterable, Iterator
 
 
 def access_detail_iter_2(access_iter: Iterable[Access]) -> Iterator[AccessDetails]:
     return map(AccessDetails.create, access_iter)
-
-
-#
-# from typing import Iterable, Iterator
-# def access_detail_iter2(access_iter: Iterable[Access]) -> Iterator[AccessDetails]:
-#     def access_detail_builder(access: Access) -> Optional[AccessDetails]:
-#         try:
-#             meth, uri, protocol = parse_request(access.request)
-#             return AccessDetails(
-#                 access=access,
-#                 time=parse_time(access.time),
-#                 method=meth,
-#                 url=urllib.parse.urlparse(uri),
-#                 protocol=protocol,
-#                 referrer=urllib.parse.urlparse(access.referer),
-#                 agent=parse_agent(access.user_agent)
-#             )
-#         except ValueError as e:
-#             print(e, repr(access))
-#         return None
-#     return filter(None, map(access_detail_builder, access_iter))
 
 
 def test_access_detail_iter(example_log_dir: Path) -> None:
@@ -623,12 +445,6 @@ def non_empty_path(detail: AccessDetails) -> bool:
     return any(path)
 
 
-#
-# def non_empty_path(detail: AccessDetails) -> bool:
-#     path = detail.url.path.split('/')
-#     return any(path)
-
-
 def non_excluded_names(detail: AccessDetails) -> bool:
     "Exclude by name; include names not in a list."
     name_exclude = {
@@ -670,17 +486,6 @@ def path_filter(
     nx_name = filter(non_excluded_names, non_empty)
     nx_ext = filter(non_excluded_ext, nx_name)
     yield from nx_ext
-
-
-#
-# from typing import Iterable, Iterator
-# def path_filter(
-#         access_details_iter: Iterable[AccessDetails]
-#     ) -> Iterable[AccessDetails]:
-#     ne = filter(non_empty_path, access_details_iter)
-#     nx_name = filter(non_excluded_names, ne)
-#     nx_ext = filter(non_excluded_ext, nx_name)
-#     return nx_ext
 
 
 def test_path_filter(example_log_dir: Path) -> None:
@@ -785,24 +590,6 @@ def book_filter(
     return filter(book_in_path, access_details_iter)
 
 
-#
-# from typing import Iterable, Iterator
-# def book_filter(access_details_iter: Iterable[AccessDetails]) -> Iterator[AccessDetails]:
-#     def book_in_path(detail: AccessDetails) -> bool:
-#         path = tuple(l for l in detail.url.path.split('/') if l)
-#         return path[0] == 'book' and len(path) > 1
-#     return filter(book_in_path, access_details_iter)
-#
-#
-# from typing import Iterable, Iterator
-# def book_filter_opt(access_details_iter: Iterable[AccessDetails]) -> Iterator[AccessDetails]:
-#     """Creates a sequence of AccessDetails information from the '/book' path."""
-#     for detail in access_details_iter:
-#         path = tuple(l for l in detail.url.path.split('/') if l)
-#         if path[0] == 'book' and len(path) > 1:
-#             yield detail
-
-
 def test_book_filter(example_log_dir: Path) -> None:
     file_iter = example_log_dir.glob("*.log.gz")
     lines = itertools.chain.from_iterable(map(local_gzip, file_iter))
@@ -820,16 +607,6 @@ from collections import Counter
 def reduce_book_total(access_details_iter: Iterable[AccessDetails]) -> dict[str, int]:
     counts: Counter[str] = Counter(detail.url.path for detail in access_details_iter)
     return counts
-
-
-#
-# from typing import Iterable, Iterator, Dict
-# from collections import Counter
-# def reduce_book_total(access_details_iter: Iterable[AccessDetails]) -> Dict[str, int]:
-#     counts: Dict[str, int] = Counter()
-#     for detail in access_details_iter:
-#         counts[detail.url.path] += 1
-#     return counts
 
 
 def test_book_count(example_log_dir: Path) -> None:
@@ -850,17 +627,6 @@ def analysis(log_path: Path) -> dict[str, int]:
     totals = reduce_book_total(books)
     return totals
 
-
-#
-# def analysis(filename: str) -> Dict[str, int]:
-#     """Count book chapters in a given file"""
-#     details = path_filter(
-#         access_detail_iter(
-#             access_iter(
-#                 local_gzip(filename))))
-#     books = book_filter(details)
-#     totals = reduce_book_total(books)
-#     return totals
 
 from collections.abc import Callable
 from typing import cast, Any

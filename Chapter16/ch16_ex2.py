@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 16, Example Set 2
 
@@ -12,71 +11,138 @@ See  http://www.itl.nist.gov/div898/handbook/prc/section4/prc45.htm
 # Four columns for each defect.
 expected_defects = [
     [15, 21, 45, 13],
-    [26, 31, 34,  5],
+    [26, 31, 34, 5],
     [33, 17, 49, 20],
 ]
 
 # Raw data reader based on qa_data.csv file.
 
-from typing import TextIO, cast
+from typing import TextIO, NamedTuple
 import csv
 from collections import Counter
-from types import SimpleNamespace
-def defect_reduce(input_file: TextIO) -> Counter:
-    """
-    >>> with open("qa_data.csv") as input:
-    ...     defects = defect_reduce(input)
-    >>> len(defects)
-    12
-    >>> sum(defects.values())
-    309
-    """
+
+
+class Defect(NamedTuple):
+    shift: str  # domain is '1', '2', '3'
+    defect_type: str
+    serial_number: str
+
+
+Shift_Type = tuple[str, str]
+
+
+def defect_reduce(input_file: TextIO) -> Counter[Shift_Type]:
     rdr = csv.DictReader(input_file)
-    assert set(rdr.fieldnames) == set(["defect_type", "serial_number", "shift"])
-    rows_ns = (SimpleNamespace(**row) for row in rdr)
-    defects = (
-        (row.shift, row.defect_type)
-        for row in rows_ns
-        if row.defect_type)
-    tally = Counter(defects)
+    defect_iter = (Defect(**row) for row in rdr)
+    shift_type_iter = (
+        (row.shift, row.defect_type) for row in defect_iter if row.defect_type
+    )
+    tally = Counter(shift_type_iter)
     return tally
 
-# Alternative reader based on summaries instead of details
 
-from typing import TextIO
+#
+# from typing import TextIO, cast
+# import csv
+# from collections import Counter
+# from types import SimpleNamespace
+# def defect_reduce(input_file: TextIO) -> Counter:
+#     """
+#     >>> with open("qa_data.csv") as input:
+#     ...     defects = defect_reduce(input)
+#     >>> len(defects)
+#     12
+#     >>> sum(defects.values())
+#     309
+#     """
+#     rdr = csv.DictReader(input_file)
+#     assert set(rdr.fieldnames) == set(["defect_type", "serial_number", "shift"])
+#     rows_ns = (SimpleNamespace(**row) for row in rdr)
+#     defects = (
+#         (row.shift, row.defect_type)
+#         for row in rows_ns
+#         if row.defect_type)
+#     tally = Counter(defects)
+#     return tally
+
+REPL_defect_reduce = """
+>>> source_path = Path.cwd() / "qa_data.csv"
+>>> with source_path.open() as input:
+...     defect_counts = defect_reduce(input)
+>>> print(defect_counts)
+{}
+Counter({('3', 'C'): 49, ('1', 'C'): 45, ('2', 'C'): 34,
+('3', 'A'): 33, ('2', 'B'): 31, ('2', 'A'): 26,
+('1', 'B'): 21, ('3', 'D'): 20, ('3', 'B'): 17,
+('1', 'A'): 15, ('1', 'D'): 13, ('2', 'D'): 5})
+"""
+
+# Summary data reader
+
+from typing import TextIO, NamedTuple
 from collections import Counter
 import csv
-def defect_counts(source: TextIO) -> Counter:
-    """
-    >>> import io
-    >>> source = io.StringIO('''shift,defect_code,count
-    ... 1,A,15
-    ... 2,A,26
-    ... 3,A,33
-    ... 1,B,21
-    ... 2,B,31
-    ... 3,B,17
-    ... 1,C,45
-    ... 2,C,34
-    ... 3,C,49
-    ... 1,D,13
-    ... 2,D,5
-    ... 3,D,20''')
-    >>> defects = defect_counts(source)
-    >>> len(defects)
-    12
-    >>> sum(defects.values())
-    309
-    """
+
+
+class DefectCount(NamedTuple):
+    shift: str
+    defect_type: str
+    count: str
+
+    @classmethod
+    def create(cls: type["DefectCount"], source: dict[str, str]) -> "DefectCount":
+        return cls(
+            shift=source["shift"],
+            defect_type=source["defect_type"],
+            count=int(source["count"]),
+        )
+
+
+def defect_counts(source: TextIO) -> dict[Shift_Type, int]:
     rdr = csv.DictReader(source)
-    assert set(rdr.fieldnames) == set(["shift", "defect_code", "count"])
-    rows_ns = (SimpleNamespace(**row) for row in rdr)
-    convert = map(
-        lambda d: ((d.shift, d.defect_code), int(d.count)),
-        rows_ns)
-    return Counter(dict(convert))
+    count_iter = (DefectCount.create(**row) for row in rdr)
+    key_value_iter = map(lambda d: ((d.shift, d.defect_type), d.count), count_iter)
+    return dict(key_value_iter)
+
+
+#
+# from typing import TextIO
+# from collections import Counter
+# import csv
+# def defect_counts(source: TextIO) -> Counter:
+#     rdr = csv.DictReader(source)
+#     assert set(rdr.fieldnames) == set(["shift", "defect_code", "count"])
+#     rows_ns = (SimpleNamespace(**row) for row in rdr)
+#     convert = map(
+#         lambda d: ((d.shift, d.defect_code), int(d.count)),
+#         rows_ns)
+#     return Counter(dict(convert))
+
+REPL_defect_counts = """
+>>> import io
+>>> source = io.StringIO('''shift,defect_code,count
+... 1,A,15
+... 2,A,26
+... 3,A,33
+... 1,B,21
+... 2,B,31
+... 3,B,17
+... 1,C,45
+... 2,C,34
+... 3,C,49
+... 1,D,13
+... 2,D,5
+... 3,D,20''')
+>>> defects = defect_counts(source)
+>>> len(defects)
+12
+>>> sum(defects.values())
+309
+"""
 
 from fractions import Fraction
+
+
 def chi2_eval(defects: Counter) -> Fraction:
     """
     >>> with open("qa_data.csv") as input:
@@ -103,73 +169,56 @@ def chi2_eval(defects: Counter) -> Fraction:
 
     shift_totals = sum(
         (Counter({s: defects[s, d]}) for s, d in defects),
-        Counter()  # start value is an empty Counter!
+        Counter(),  # start value is an empty Counter!
     )
-    shift_detail = list(
-        (s, shift_totals[s])
-        for s in sorted(shift_totals)
-    )
+    shift_detail = list((s, shift_totals[s]) for s in sorted(shift_totals))
     print(f"Shift Total {shift_detail}")
 
     type_totals = sum(
         (Counter({d: defects[s, d]}) for s, d in defects),
-        Counter()  # start value = empty Counter
+        Counter(),  # start value = empty Counter
     )
-    type_detail = list(
-        (t, type_totals[t])
-        for t in sorted(type_totals))
+    type_detail = list((t, type_totals[t]) for t in sorted(type_totals))
     print(f"Type Total {type_detail}")
 
     P_shift = {
-        shift: Fraction(shift_totals[shift], total)
-        for shift in sorted(shift_totals)
+        shift: Fraction(shift_totals[shift], total) for shift in sorted(shift_totals)
     }
 
-    P_shift_details = list(
-        (s, P_shift[s]) for s in sorted(P_shift))
+    P_shift_details = list((s, P_shift[s]) for s in sorted(P_shift))
     print(f"Prob(shift) of defect {P_shift_details}")
 
-    P_type = {
-        type: Fraction(type_totals[type], total)
-        for type in sorted(type_totals)
-    }
+    P_type = {type: Fraction(type_totals[type], total) for type in sorted(type_totals)}
 
-    P_type_details = list(
-        (t, P_type[t]) for t in sorted(P_type))
+    P_type_details = list((t, P_type[t]) for t in sorted(P_type))
     print(f"Prob(type) of defect {P_type_details}")
 
-    expected = {
-        (s, t): P_shift[s]*P_type[t]*total
-        for t in P_type
-        for s in P_shift
-    }
+    expected = {(s, t): P_shift[s] * P_type[t] * total for t in P_type for s in P_shift}
 
     print("\nContingency Table")
-    print("obs exp    "*len(type_totals))
+    print("obs exp    " * len(type_totals))
     for s in sorted(shift_totals):
         pairs = [
             f"{defects[s,t]:3d} {float(expected[s,t]):5.2f}"
             for t in sorted(type_totals)
         ]
         print(f"{'  '.join(pairs)}  {shift_totals[s]:3d}")
-    footers = [
-        f"{type_totals[t]:3d}      "
-        for t in sorted(type_totals)]
+    footers = [f"{type_totals[t]:3d}      " for t in sorted(type_totals)]
     print(f"{'  '.join(footers)}  {total:3d}")
 
     # Difference
 
-    diff = lambda e, o: (e-o)**2/e
+    diff = lambda e, o: (e - o) ** 2 / e
 
     chi2 = sum(
-        diff(expected[s, t], defects[s, t])
-        for s in shift_totals
-        for t in type_totals
+        diff(expected[s, t], defects[s, t]) for s in shift_totals for t in type_totals
     )
     # Cast required to narrow sum from Union[Fraction, int] to Fraction
     return cast(Fraction, chi2)
 
+
 from Chapter16.ch16_ex3 import cdf
+
 
 def demo():
     with open("qa_data.csv") as input_file:
@@ -177,11 +226,16 @@ def demo():
     chi2 = chi2_eval(defects)
     print(f"χ² = {float(chi2):.2f}")
     print(f"χ² = {chi2.limit_denominator(50)}, P = {float(cdf(chi2, 6)):0.3%}")
-    print(f"χ² = {chi2.limit_denominator(100)}, P = {cdf(chi2, 6).limit_denominator(1000)}")
+    print(
+        f"χ² = {chi2.limit_denominator(100)}, P = {cdf(chi2, 6).limit_denominator(1000)}"
+    )
+
 
 def test():
     import doctest
+
     doctest.testmod(verbose=1)
+
 
 if __name__ == "__main__":
     test()

@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
-"""Functional Python Programming
+"""Functional Python Programming 3e
 
 Chapter 15, Example Set 3
 """
 
+from collections.abc import Iterable
 from wsgiref.simple_server import make_server, demo_app
 import wsgiref.util
 import urllib
@@ -11,38 +11,42 @@ import urllib.parse
 from pathlib import Path
 import sys
 
-from typing import (
-    Dict, Callable, List, Tuple, Iterator, Union, Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from _typeshed.wsgi import WSGIApplication, WSGIEnvironment, StartResponse
+
+from textwrap import dedent
+
+TEST_TEMPLATE = dedent(
+    """\
+    <!DOCTYPE html>
+    <html>
+    <head><title>Run Tests</title></head>
+    <body>
+    <h1>Tests</h1>
+    <p>Results</p>
+    <pre><code>{0}
+    </code></pre>
+    <form method="POST" action="">
+    <hr/>
+    <input type="submit" value="Run Tests"/>
+    </form>
+    </body>
+    </html>
+    """
 )
-from mypy_extensions import DefaultArg
 
-# Requires mypy_extensions to properly declare the start_response callback.
-SR_Func = Callable[[str, List[Tuple[str, str]], DefaultArg(Tuple)], None]
 
-TEST_TEMPLATE = """<html>
-<head><title>Run Tests</title></head>
-<body>
-<h1>Tests</h1>
-<p>Results</p>
-<pre><code>{0}
-</code></pre>
-<form method="POST" action="">
-<hr/>
-<input type="submit" value="Run Tests"/>
-</form>
-</body>
-</html>"""
-
-def test_app(
-        environ: Dict,
-        start_response: SR_Func
-    ) -> Union[Iterator[bytes], List[bytes]]:
+def selftest_app(
+    environ: "WSGIEnvironment", start_response: "StartResponse"
+) -> Iterable[bytes]:
     """Runs the unit test suite."""
-    if environ['REQUEST_METHOD'] == "GET":
+    if environ["REQUEST_METHOD"] == "GET":
         # send form and previous results (if any)
-        if environ['QUERY_STRING']:
-            query = urllib.parse.parse_qs(environ['QUERY_STRING'])
-            file_path = Path(environ['TMPDIR']) / query['filename'][0]
+        if environ["QUERY_STRING"]:
+            query = urllib.parse.parse_qs(environ["QUERY_STRING"])
+            file_path = Path(environ["TMPDIR"]) / query["filename"][0]
             with file_path.open() as result_file:
                 results = result_file.read()
         else:
@@ -52,54 +56,54 @@ def test_app(
         headers = [
             ("Content-Type", 'text/html; charset="utf-8"'),
             ("Content-Length", str(len(content))),
-            ]
-        start_response('200 OK', headers)
-        return [content]
-    elif environ['REQUEST_METHOD'] == "POST":
-        # Run tests, collect data in a cache file
-        import test_all
-        file_path = Path(environ['TMPDIR']) / "results"
-        file_list = sorted(
-            Path.cwd().glob("Chapter_*"),
-            key=lambda p: test_all.chap_key(p.name))
-        with file_path.open("w") as result_file:
-            sys.stderr = result_file
-            local_names = [
-                str(item.relative_to(Path.cwd())) for item in file_list
-            ]
-            test_all.master_test_suite(
-                test_all.package_module_iter(*local_names))
-            sys.stderr = sys.__stderr__
-        # Might want to compute a distinct filename each time
-        filename = {"filename": "results"}
-        encoded_filename = urllib.parse.urlencode(filename)
-        headers = [
-            ("Location", "/test?{0}".format(encoded_filename))
         ]
+        start_response("200 OK", headers)
+        return [content]
+    elif environ["REQUEST_METHOD"] == "POST":
+        # Run doctest, collect data in a cache file
+        import doctest
+        from contextlib import redirect_stdout, redirect_stderr
+
+        file_path = Path(environ["TMPDIR"]) / "results.log"
+        with file_path.open("w") as result_file:
+            with redirect_stdout(result_file), redirect_stderr(result_file):
+                for file_path in Path.cwd().glob("*.py"):
+                    doctest.testfile(str(file_path))
+        filename_query = {"filename": file_path.name}
+        encoded_filename = urllib.parse.urlencode(filename_query)
+        headers = [("Location", f"/test?{encoded_filename}")]
         start_response("302 FOUND", headers)
         return []
     start_response("400 NOT ALLOWED", [])
     return []
 
-INDEX_TEMPLATE_HEAD = """<html>
-<head><title>Chapter 15</title></head>
-<body><h1>Files in {0}</h1>
-"""
 
-INDEX_TEMPLATE_FOOT = """
-</body></html>
-"""
+INDEX_TEMPLATE_HEAD = dedent(
+    """\
+    <!DOCTYPE html>
+    <html>
+    <head><title>Chapter 15</title></head>
+    <body><h1>Files in {0}</h1>
+    """
+)
+
+INDEX_TEMPLATE_FOOT = dedent(
+    """
+    </body></html>
+    """
+)
+
 
 def index_app(
-        environ: Dict,
-        start_response: SR_Func
-    ) -> Union[Iterator[bytes], List[bytes]]:
+    environ: "WSGIEnvironment", start_response: "StartResponse"
+) -> Iterable[bytes]:
     """Displays an index of available files."""
-    log = environ['wsgi.errors']
-    print("PATH_INFO '{0}'".format(environ['PATH_INFO']), file=log)
-    page = INDEX_TEMPLATE_HEAD.format(environ.get('PATH_INFO', '.'))
-    for entry in (Path.cwd()/environ['PATH_INFO'][1:]).glob('*'):
-        if entry.name.startswith('.'): continue
+    log = environ["wsgi.errors"]
+    print("PATH_INFO '{0}'".format(environ["PATH_INFO"]), file=log)
+    page = INDEX_TEMPLATE_HEAD.format(environ.get("PATH_INFO", "."))
+    for entry in (Path.cwd() / environ["PATH_INFO"][1:]).glob("*"):
+        if entry.name.startswith("."):
+            continue
         rel_path = entry.relative_to(Path.cwd())
         page += '<p><a href="/static/{0}">{1}</a></p>'.format(rel_path, entry.name)
     page += INDEX_TEMPLATE_FOOT
@@ -108,94 +112,141 @@ def index_app(
         ("Content-Type", 'text/html; charset="utf-8"'),
         ("Content-Length", str(len(content))),
     ]
-    start_response('200 OK', headers)
+    start_response("200 OK", headers)
     return [content]
 
-def static_app(
-        environ: Dict,
-        start_response: SR_Func
-    ) -> Union[Iterator[bytes], List[bytes]]:
-    """Displays a single, static file."""
-    log = environ['wsgi.errors']
-    try:
-        print(f"CWD={Path.cwd()}", file=log)
-        static_path = Path.cwd()/environ['PATH_INFO'][1:]
-        with static_path.open() as static_file:
-            content = static_file.read().encode("utf-8")
-            headers = [
-                ("Content-Type", 'text/plain; charset="utf-8"'),
-                ("Content-Length", str(len(content))),
-            ]
-            start_response('200 OK', headers)
-            return [content]
-    except IsADirectoryError as e:
-        return index_app(environ, start_response)
-    except FileNotFoundError as e:
-        start_response('404 NOT FOUND', [])
-        return [f"Not Found {static_path}\n{e!r}".encode("utf-8")]
 
-WELCOME_TEMPLATE = """<html>
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chapter 15</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-</head>
-<body>
-<div class="container">
-<h1>Chapter 15</h1>
-<p><a href="demo" class="btn btn-default" role="button">The WSGI Demo App</a></p>
-<p><a href="static" class="btn btn-default" role="button">All Code</a></p>
-<p><a href="test" class="btn btn-default" role="button">Run Test Suite</a></p>
-<p><a href="static/Chapter_15/ch15_ex3.py" class="btn btn-default" role="button">This Code</a></p>
-</div>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-</body>
-</html>"""
+def headers(content: bytes) -> list[tuple[str, str]]:
+    return [
+        ("Content-Type", 'text/plain;charset="utf-8"'),
+        ("Content-Length", str(len(content))),
+    ]
+
+
+def static_text_app(
+    environ: "WSGIEnvironment", start_response: "StartResponse"
+) -> Iterable[bytes]:
+    log = environ["wsgi.errors"]
+    try:
+        static_path = Path.cwd() / environ["PATH_INFO"][1:]
+        with static_path.open() as static_file:
+            print(f"{static_path=}", file=log)
+            content = static_file.read().encode("utf-8")
+            start_response("200 OK", headers(content))
+            return [content]
+    except IsADirectoryError as exc:
+        return index_app(environ, start_response)
+    except FileNotFoundError as exc:
+        print(f"{static_path=} {exc=}", file=log)
+        message = f"Not Found {environ['PATH_INFO']}".encode("utf-8")
+        start_response("404 NOT FOUND", headers(message))
+        return [message]
+
+
+WELCOME_TEMPLATE = dedent(
+    """\
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chapter 15</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    </head>
+    <body>
+    <div class="container">
+    <h1>Chapter 15</h1>
+    <p><a href="demo" class="btn btn-default" role="button">The WSGI Demo App</a></p>
+    <p><a href="static" class="btn btn-default" role="button">All Files</a></p>
+    <p><a href="static/Chapter15/ch15_ex3.py" class="btn btn-default" role="button">This File</a></p>
+    </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    </body>
+    </html>
+    """
+)
+
 
 def welcome_app(
-        environ: Dict,
-        start_response: SR_Func
-    ) -> Union[Iterator[bytes], List[bytes]]:
+    environ: "WSGIEnvironment", start_response: "StartResponse"
+) -> Iterable[bytes]:
     """Displays a page of greeting information."""
     content = WELCOME_TEMPLATE.encode("utf-8")
     headers = [
         ("Content-Type", "text/html; charset=utf-8"),
         ("Content-Length", str(len(content))),
     ]
-    start_response('200 OK', headers)
+    start_response("200 OK", headers)
     return [content]
 
-SCRIPT_MAP = {
+
+from wsgiref.simple_server import demo_app
+
+SCRIPT_MAP: dict[str, "WSGIApplication"] = {
     "demo": demo_app,
-    "static": static_app,
-    "test": test_app,
+    "static": static_text_app,
+    "index.html": welcome_app,
     "": welcome_app,
 }
 
+
 def routing(
-        environ: Dict,
-        start_response: SR_Func
-    ) -> Union[Iterator[bytes], List[bytes]]:
-    """Routing among the apps using the script information."""
+    environ: "WSGIEnvironment", start_response: "StartResponse"
+) -> Iterable[bytes]:
     top_level = wsgiref.util.shift_path_info(environ)
-    app = SCRIPT_MAP.get(top_level, SCRIPT_MAP[''])
+    if top_level:
+        app = SCRIPT_MAP.get(top_level, welcome_app)
+    else:
+        app = welcome_app
     content = app(environ, start_response)
     return content
 
-def server_demo():
-    httpd = make_server('', 8080, routing)
+
+def server_demo() -> None:
+    httpd = make_server("", 8080, routing)
     print("Serving HTTP on port 8080...")
 
     # Respond to requests until process is killed
     httpd.serve_forever()
 
-def test():
-    import doctest
-    doctest.testmod(verbose=1)
+
+import urllib.request
+
+
+def urllib_get(url: str) -> tuple[int, str]:
+    with urllib.request.urlopen(url) as response:
+        body_bytes = response.read()
+        encoding = response.headers.get_content_charset("utf-8")
+        return response.status, body_bytes.decode(encoding)
+
+
+import pytest
+
+
+@pytest.mark.server_file("Chapter15/ch15_ex3.py")
+def test_server(running_server: Path) -> None:
+    # demo app part of WSGI ref
+    status, body = urllib_get("http://localhost:8080/demo/some/path/to/data")
+    assert status == 200
+    print(body)
+
+    # static
+    status, body = urllib_get("http://localhost:8080/static/Chapter15/demo.file")
+    assert status == 200
+    assert body == (Path.cwd() / "Chapter15" / "demo.file").read_text()
+
+    # static/index
+    status, body = urllib_get("http://localhost:8080/static/")
+    assert status == 200
+    assert "<h1>Files in /</h1>" in body
+
+    # welcome
+    status, body = urllib_get("http://localhost:8080/welcome/")
+    assert status == 200
+    assert body == WELCOME_TEMPLATE
+
 
 if __name__ == "__main__":
-    test()
     server_demo()

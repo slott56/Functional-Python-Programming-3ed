@@ -16,7 +16,7 @@ REPL_function_as_object = """
 """
 
 REPL_lambda = """
->>> mersenne = lambda x: 2**x-1
+>>> mersenne = lambda x: 2 ** x - 1
 >>> mersenne(17)
 131071
 """
