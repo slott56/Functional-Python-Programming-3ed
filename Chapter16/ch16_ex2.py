@@ -4,9 +4,8 @@ Chapter 16, Example Set 2
 
 See  http://www.itl.nist.gov/div898/handbook/prc/section4/prc45.htm
 """
-# pylint: disable=wrong-import-position,reimported
 
-# Original data.
+# Original data from the NIST handbook.
 # Three rows for each shift.
 # Four columns for each defect.
 expected_defects = [
@@ -15,7 +14,7 @@ expected_defects = [
     [33, 17, 49, 20],
 ]
 
-# Raw data reader based on qa_data.csv file.
+# Raw data reader.
 
 from typing import TextIO, NamedTuple
 import csv
@@ -66,15 +65,27 @@ def defect_reduce(input_file: TextIO) -> Counter[Shift_Type]:
 #     return tally
 
 REPL_defect_reduce = """
+>>> from pathlib import Path
+
 >>> source_path = Path.cwd() / "qa_data.csv"
 >>> with source_path.open() as input:
 ...     defect_counts = defect_reduce(input)
->>> print(defect_counts)
-{}
-Counter({('3', 'C'): 49, ('1', 'C'): 45, ('2', 'C'): 34,
-('3', 'A'): 33, ('2', 'B'): 31, ('2', 'A'): 26,
-('1', 'B'): 21, ('3', 'D'): 20, ('3', 'B'): 17,
-('1', 'A'): 15, ('1', 'D'): 13, ('2', 'D'): 5})
+
+>>> from pprint import pprint
+
+>>> pprint(defect_counts)
+Counter({('3', 'C'): 49,
+         ('1', 'C'): 45,
+         ('2', 'C'): 34,
+         ('3', 'A'): 33,
+         ('2', 'B'): 31,
+         ('2', 'A'): 26,
+         ('1', 'B'): 21,
+         ('3', 'D'): 20,
+         ('3', 'B'): 17,
+         ('1', 'A'): 15,
+         ('1', 'D'): 13,
+         ('2', 'D'): 5})
 """
 
 # Summary data reader
@@ -87,21 +98,19 @@ import csv
 class DefectCount(NamedTuple):
     shift: str
     defect_type: str
-    count: str
+    total_count: int
 
     @classmethod
     def create(cls: type["DefectCount"], source: dict[str, str]) -> "DefectCount":
-        return cls(
-            shift=source["shift"],
-            defect_type=source["defect_type"],
-            count=int(source["count"]),
-        )
+        return cls(source["shift"], source["defect_type"], int(source["count"]))
 
 
-def defect_counts(source: TextIO) -> dict[Shift_Type, int]:
+def defect_summary(source: TextIO) -> dict[Shift_Type, int]:
     rdr = csv.DictReader(source)
-    count_iter = (DefectCount.create(**row) for row in rdr)
-    key_value_iter = map(lambda d: ((d.shift, d.defect_type), d.count), count_iter)
+    count_iter = (DefectCount.create(row) for row in rdr)
+    key_value_iter = map(
+        lambda d: ((d.shift, d.defect_type), d.total_count), count_iter
+    )
     return dict(key_value_iter)
 
 
@@ -120,7 +129,7 @@ def defect_counts(source: TextIO) -> dict[Shift_Type, int]:
 
 REPL_defect_counts = """
 >>> import io
->>> source = io.StringIO('''shift,defect_code,count
+>>> source = io.StringIO('''shift,defect_type,count
 ... 1,A,15
 ... 2,A,26
 ... 3,A,33
@@ -133,110 +142,246 @@ REPL_defect_counts = """
 ... 1,D,13
 ... 2,D,5
 ... 3,D,20''')
->>> defects = defect_counts(source)
+>>> defects = defect_summary(source)
 >>> len(defects)
 12
+
 >>> sum(defects.values())
 309
 """
 
+
+from collections.abc import Callable
+
+ShiftDefect = tuple[str, str]
+SourceCounter = Counter[ShiftDefect]
+
+
+def summarize_by(
+    subset_key: Callable[[ShiftDefect], str], source: SourceCounter
+) -> Counter[str]:
+    grouped_iter = (Counter({subset_key(k): v}) for k, v in source.items())
+    return sum(grouped_iter, Counter())
+
+
+REPL_summarize_by = """
+>>> from pathlib import Path
+
+>>> source_path = Path.cwd() / "qa_data.csv"
+>>> with source_path.open() as input:
+...     defect_counts = defect_reduce(input)
+
+>>> from pprint import pprint
+
+>>> pprint(defect_counts)
+Counter({('3', 'C'): 49,
+         ('1', 'C'): 45,
+         ('2', 'C'): 34,
+         ('3', 'A'): 33,
+         ('2', 'B'): 31,
+         ('2', 'A'): 26,
+         ('1', 'B'): 21,
+         ('3', 'D'): 20,
+         ('3', 'B'): 17,
+         ('1', 'A'): 15,
+         ('1', 'D'): 13,
+         ('2', 'D'): 5})
+
+>>> total = sum(defect_counts.values())
+>>> total
+309
+
+>>> shift_totals = summarize_by(lambda s_d: s_d[0], defect_counts)
+>>> type_totals = summarize_by(lambda s_d: s_d[1], defect_counts)
+
+>>> shift_totals
+Counter({'3': 119, '2': 96, '1': 94})
+>>> type_totals
+Counter({'C': 128, 'A': 74, 'B': 69, 'D': 38})
+"""
+
+
 from fractions import Fraction
 
 
-def chi2_eval(defects: Counter) -> Fraction:
-    """
-    >>> with open("qa_data.csv") as input:
-    ...     defects = defect_reduce(input)
-    >>> chi2 = chi2_eval(defects) #doctest: +NORMALIZE_WHITESPACE
-    Total 309
-    Shift Total [('1', 94), ('2', 96), ('3', 119)]
-    Type Total [('A', 74), ('B', 69), ('C', 128), ('D', 38)]
-    Prob(shift) of defect [('1', Fraction(94, 309)), ('2', Fraction(32, 103)), ('3', Fraction(119, 309))]
-    Prob(type) of defect [('A', Fraction(74, 309)), ('B', Fraction(23, 103)), ('C', Fraction(128, 309)), ('D', Fraction(38, 309))]
-    <BLANKLINE>
-    Contingency Table
-    obs exp    obs exp    obs exp    obs exp
-     15 22.51   21 20.99   45 38.94   13 11.56   94
-     26 22.99   31 21.44   34 39.77    5 11.81   96
-     33 28.50   17 26.57   49 49.29   20 14.63  119
-     74         69        128         38        309
-    >>> chi2.limit_denominator(100)
-    Fraction(1400, 73)
-    """
-    # pylint: disable=too-many-locals
-    total = sum(defects.values())
-    print(f"Total {total}")
+def probability_by(
+    subset_key: Callable[[ShiftDefect], str], source: SourceCounter
+) -> dict[str, Fraction]:
+    total = sum(source.values())
+    sub_totals = summarize_by(subset_key, source)
+    return {k: Fraction(sub_totals[k], total) for k in sub_totals}
 
-    shift_totals = sum(
-        (Counter({s: defects[s, d]}) for s, d in defects),
-        Counter(),  # start value is an empty Counter!
-    )
-    shift_detail = list((s, shift_totals[s]) for s in sorted(shift_totals))
-    print(f"Shift Total {shift_detail}")
 
-    type_totals = sum(
-        (Counter({d: defects[s, d]}) for s, d in defects),
-        Counter(),  # start value = empty Counter
-    )
-    type_detail = list((t, type_totals[t]) for t in sorted(type_totals))
-    print(f"Type Total {type_detail}")
+REPL_fractions = """
+>>> from pathlib import Path
 
-    P_shift = {
-        shift: Fraction(shift_totals[shift], total) for shift in sorted(shift_totals)
+>>> source_path = Path.cwd() / "qa_data.csv"
+>>> with source_path.open() as input:
+...     defect_counts = defect_reduce(input)
+
+
+>>> P_shift = probability_by(lambda s_d: s_d[0], defect_counts)
+>>> P_type = probability_by(lambda s_d: s_d[1], defect_counts)
+
+>>> from pprint import pprint
+
+>>> pprint(P_shift, width=64)
+{'1': Fraction(94, 309),
+ '2': Fraction(32, 103),
+ '3': Fraction(119, 309)}
+
+>>> pprint(P_type, width=64)
+{'A': Fraction(74, 309),
+ 'B': Fraction(23, 103),
+ 'C': Fraction(128, 309),
+ 'D': Fraction(38, 309)}
+"""
+
+
+def expected(source: SourceCounter) -> dict[ShiftDefect, Fraction]:
+    total = sum(source.values())
+    P_shift = probability_by(lambda s_d: s_d[0], source)
+    P_type = probability_by(lambda s_d: s_d[1], source)
+    return {
+        (s, t): P_shift[s] * P_type[t] * total
+        for t in sorted(P_type)
+        for s in sorted(P_shift)
     }
 
-    P_shift_details = list((s, P_shift[s]) for s in sorted(P_shift))
-    print(f"Prob(shift) of defect {P_shift_details}")
 
-    P_type = {type: Fraction(type_totals[type], total) for type in sorted(type_totals)}
+REPL_expected = """
+>>> from pathlib import Path
 
-    P_type_details = list((t, P_type[t]) for t in sorted(P_type))
-    print(f"Prob(type) of defect {P_type_details}")
+>>> source_path = Path.cwd() / "qa_data.csv"
+>>> with source_path.open() as input:
+...     defect_counts = defect_reduce(input)
 
-    expected = {(s, t): P_shift[s] * P_type[t] * total for t in P_type for s in P_shift}
 
-    print("\nContingency Table")
-    print("obs exp    " * len(type_totals))
+>>> from pprint import pprint
+
+>>> pprint(expected(defect_counts))
+{('1', 'A'): Fraction(6956, 309),
+ ('1', 'B'): Fraction(2162, 103),
+ ('1', 'C'): Fraction(12032, 309),
+ ('1', 'D'): Fraction(3572, 309),
+ ('2', 'A'): Fraction(2368, 103),
+ ('2', 'B'): Fraction(2208, 103),
+ ('2', 'C'): Fraction(4096, 103),
+ ('2', 'D'): Fraction(1216, 103),
+ ('3', 'A'): Fraction(8806, 309),
+ ('3', 'B'): Fraction(2737, 103),
+ ('3', 'C'): Fraction(15232, 309),
+ ('3', 'D'): Fraction(4522, 309)}
+"""
+
+from rich.table import Table
+from rich.console import Console
+
+
+def contingency_table(
+    expected: dict[ShiftDefect, Fraction], defect_counts: Counter[ShiftDefect]
+) -> None:
+    total = sum(defect_counts.values())
+    shift_totals = summarize_by(lambda s_d: s_d[0], defect_counts)
+    type_totals = summarize_by(lambda s_d: s_d[1], defect_counts)
+
+    table = Table(title="Contingency Table")
+    table.add_column("shift")
+    for defect_type in sorted(type_totals):
+        table.add_column(f"{defect_type} obs")
+        table.add_column(f"{defect_type} exp")
+    table.add_column("total")
+
     for s in sorted(shift_totals):
-        pairs = [
-            f"{defects[s,t]:3d} {float(expected[s,t]):5.2f}"
-            for t in sorted(type_totals)
-        ]
-        print(f"{'  '.join(pairs)}  {shift_totals[s]:3d}")
-    footers = [f"{type_totals[t]:3d}      " for t in sorted(type_totals)]
-    print(f"{'  '.join(footers)}  {total:3d}")
+        row = [f"{s}"]
+        for t in sorted(type_totals):
+            row.append(f"{defect_counts[s,t]:3d}")
+            row.append(f"{float(expected[s,t]):5.2f}")
+        row.append(f"{shift_totals[s]:3d}")
+        table.add_row(*row)
 
-    # Difference
+    footers = ["total"]
+    for t in sorted(type_totals):
+        footers.append(f"{type_totals[t]:3d}")
+        footers.append("")
+    footers.append(f"{total:3d}")
+    table.add_row(*footers)
 
-    diff = lambda e, o: (e - o) ** 2 / e
+    console = Console()
+    console.print(table)
+
+
+REPL_contingency_table = """
+>>> from pathlib import Path
+
+>>> source_path = Path.cwd() / "qa_data.csv"
+>>> with source_path.open() as input:
+...     defect_counts = defect_reduce(input)
+
+
+>>> contingency_table(expected(defect_counts), defect_counts)
+                               Contingency Table                                
+┏━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━┓
+┃ shift ┃ A obs ┃ A exp ┃ B obs ┃ B exp ┃ C obs ┃ C exp ┃ D obs ┃ D exp ┃ tot… ┃
+┡━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━┩
+│ 1     │  15   │ 22.51 │  21   │ 20.99 │  45   │ 38.94 │  13   │ 11.56 │  94  │
+│ 2     │  26   │ 22.99 │  31   │ 21.44 │  34   │ 39.77 │   5   │ 11.81 │  96  │
+│ 3     │  33   │ 28.50 │  17   │ 26.57 │  49   │ 49.29 │  20   │ 14.63 │ 119  │
+│ total │  74   │       │  69   │       │ 128   │       │  38   │       │ 309  │
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴──────┘
+"""
+
+
+def chi2(defect_counts: Counter[ShiftDefect]) -> Fraction:
+    total = sum(defect_counts.values())
+    shift_totals = summarize_by(lambda s_d: s_d[0], defect_counts)
+    type_totals = summarize_by(lambda s_d: s_d[1], defect_counts)
+
+    expected_counts = expected(defect_counts)
+
+    diff_sq_e: Callable[[Fraction, int], Fraction] = lambda e, o: (e - o) ** 2 / e
 
     chi2 = sum(
-        diff(expected[s, t], defects[s, t]) for s in shift_totals for t in type_totals
+        diff_sq_e(expected_counts[s, t], defect_counts[s, t])
+        for s in shift_totals
+        for t in type_totals
     )
-    # Cast required to narrow sum from Union[Fraction, int] to Fraction
-    return cast(Fraction, chi2)
+    return Fraction(chi2)  # convert any int result to Fraction
+
+
+REPL_chi2 = """
+>>> from pathlib import Path
+
+>>> source_path = Path.cwd() / "qa_data.csv"
+>>> with source_path.open() as input:
+...     defect_counts = defect_reduce(input)
+
+
+>>> round(float(chi2(defect_counts)), 2)
+19.18
+>>> chi2(defect_counts).limit_denominator(20)
+Fraction(326, 17)
+"""
 
 
 from Chapter16.ch16_ex3 import cdf
+from pathlib import Path
 
 
-def demo():
-    with open("qa_data.csv") as input_file:
-        defects = defect_reduce(input_file)
-    chi2 = chi2_eval(defects)
-    print(f"χ² = {float(chi2):.2f}")
-    print(f"χ² = {chi2.limit_denominator(50)}, P = {float(cdf(chi2, 6)):0.3%}")
-    print(
-        f"χ² = {chi2.limit_denominator(100)}, P = {cdf(chi2, 6).limit_denominator(1000)}"
-    )
+def demo() -> None:
+    source_path = Path.cwd() / "qa_data.csv"
+    with source_path.open() as input_file:
+        defect_counts = defect_reduce(input_file)
+
+    contingency_table(expected(defect_counts), defect_counts)
+
+    x2 = chi2(defect_counts)
+    print(f"χ² = {float(x2):.2f}")
+    print(f"χ² = {x2.limit_denominator(50)}, P = {float(cdf(x2, 6)):0.3%}")
+    print(f"χ² = {x2.limit_denominator(100)}, P = {cdf(x2, 6).limit_denominator(1000)}")
 
 
-def test():
-    import doctest
-
-    doctest.testmod(verbose=1)
-
+__test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}
 
 if __name__ == "__main__":
-    test()
     demo()
