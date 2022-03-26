@@ -40,30 +40,6 @@ def defect_reduce(input_file: TextIO) -> Counter[Shift_Type]:
     return tally
 
 
-#
-# from typing import TextIO, cast
-# import csv
-# from collections import Counter
-# from types import SimpleNamespace
-# def defect_reduce(input_file: TextIO) -> Counter:
-#     """
-#     >>> with open("qa_data.csv") as input:
-#     ...     defects = defect_reduce(input)
-#     >>> len(defects)
-#     12
-#     >>> sum(defects.values())
-#     309
-#     """
-#     rdr = csv.DictReader(input_file)
-#     assert set(rdr.fieldnames) == set(["defect_type", "serial_number", "shift"])
-#     rows_ns = (SimpleNamespace(**row) for row in rdr)
-#     defects = (
-#         (row.shift, row.defect_type)
-#         for row in rows_ns
-#         if row.defect_type)
-#     tally = Counter(defects)
-#     return tally
-
 REPL_defect_reduce = """
 >>> from pathlib import Path
 
@@ -113,19 +89,6 @@ def defect_summary(source: TextIO) -> dict[Shift_Type, int]:
     )
     return dict(key_value_iter)
 
-
-#
-# from typing import TextIO
-# from collections import Counter
-# import csv
-# def defect_counts(source: TextIO) -> Counter:
-#     rdr = csv.DictReader(source)
-#     assert set(rdr.fieldnames) == set(["shift", "defect_code", "count"])
-#     rows_ns = (SimpleNamespace(**row) for row in rdr)
-#     convert = map(
-#         lambda d: ((d.shift, d.defect_code), int(d.count)),
-#         rows_ns)
-#     return Counter(dict(convert))
 
 REPL_defect_counts = """
 >>> import io

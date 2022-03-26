@@ -15,18 +15,6 @@ def fact(k: int) -> int:
     return reduce(operator.mul, range(2, int(k) + 1))
 
 
-# from fractions import Fraction
-# from functools import lru_cache, reduce
-# import operator
-#
-# @lru_cache(128)
-# def fact(k: int) -> int:
-#     """Factorial of a Fraction or an int."""
-#     if k < 2:
-#         return 1
-#     return reduce(operator.mul, range(2, int(k)+1))
-
-
 def test_fact() -> None:
     assert fact(1) == 1
     assert fact(2) == 2
@@ -65,32 +53,6 @@ def gamma(s: Fraction | int, z: Fraction | int) -> Fraction:
     return cast(Fraction, g)
 
 
-#
-# from collections.abc import Iterator, Iterable, Callable
-# from fractions import Fraction
-# from typing import cast
-# import warnings
-#
-# def gamma(s: Fraction, z: Fraction) -> Fraction:
-#     """Incomplete gamma function."""
-#     def terms(s: Fraction, z: Fraction) -> Iterator[Fraction]:
-#         """Terms for computing partial gamma"""
-#         for k in range(100):
-#             t2 = Fraction(z**(s+k))/(s+k)
-#             term = Fraction((-1)**k, fact(k))*t2
-#             yield term
-#         warnings.warn("More than 100 terms")
-#     def take_until(function: Callable[..., bool], source: Iterable) -> Iterator:
-#         """Take from source until function is false."""
-#         for v in source:
-#             if function(v):
-#                 return
-#             yield v
-#     ε = 1E-8
-#     g = sum(take_until(lambda t: abs(t) < ε, terms(s, z)))
-#     # cast required to narrow sum from Union[Fraction, int] to Fraction
-#     return cast(Fraction, g)
-
 from pytest import approx
 
 
@@ -128,24 +90,6 @@ def Gamma_Half(k: Union[int, Fraction]) -> Fraction:
     raise ValueError(f"Can't compute Γ({k})")
 
 
-#
-# sqrt_pi = Fraction(677_622_787, 382_307_718)
-# # Fraction(582_540, 328_663)  # Good for almost all test cases but one.
-#
-# from typing import Union
-# def Gamma_Half(k: Union[int, Fraction]) -> Union[int, Fraction]:
-#     """Gamma(k) with special case for k = n+1/2; k-1/2=n."""
-#     if isinstance(k, int):
-#         return fact(k-1)
-#     elif isinstance(k, Fraction):
-#         if k.denominator == 1:
-#             return fact(k-1)
-#         elif k.denominator == 2:
-#             n = k-Fraction(1, 2)
-#             return fact(2*n)/(Fraction(4**n)*fact(n))*sqrt_pi
-#     raise ValueError(f"Can't compute Γ({k})")
-
-
 def test_gamma_half() -> None:
     import math
 
@@ -181,18 +125,6 @@ def cdf(x: Union[Fraction, float], k: int) -> Fraction:
     """
 
     return 1 - gamma(Fraction(k, 2), Fraction(x / 2)) / Gamma_Half(Fraction(k, 2))
-
-
-#
-# def cdf(x: Union[Fraction, float], k: int) -> Fraction:
-#     """χ² cumulative distribution function.
-#
-#     :param x: χ² value -- generally sum(obs[i]-exp[i])**2/exp[i]
-#         for parallel sequences of observed and expected values.
-#     :param k: degrees of freedom >= 1; generally len(data)-1
-#     """
-#     return 1 - gamma(Fraction(k, 2), Fraction(x / 2)) / Gamma_Half(Fraction(k, 2))
-#     #return 1-gamma(Fraction(k,2), Fraction(x/2).limit_denominator(1000))/Gamma_Half(Fraction(k,2))
 
 
 def test_cdf() -> None:
