@@ -79,15 +79,17 @@ from typing import Union
 
 
 def Gamma_Half(k: Union[int, Fraction]) -> Fraction:
-    if isinstance(k, int):
-        return Fraction(fact(k - 1), 1)
-    elif isinstance(k, Fraction):
-        if k.denominator == 1:
-            return Fraction(fact(k - 1), 1)
-        elif k.denominator == 2:
+    match k:
+        case int():
+            g = Fraction(fact(k - 1), 1)
+        case Fraction() if k.denominator == 1:
+            g = Fraction(fact(k - 1), 1)
+        case Fraction() if k.denominator == 2:
             n = k - Fraction(1, 2)
-            return fact(2 * n) / (Fraction(4 ** n) * fact(n)) * sqrt_pi
-    raise ValueError(f"Can't compute Γ({k})")
+            g = fact(2 * n) / (Fraction(4 ** n) * fact(n)) * sqrt_pi
+        case _:
+            raise ValueError(f"Can't compute Γ({k})")
+    return g
 
 
 def test_gamma_half() -> None:

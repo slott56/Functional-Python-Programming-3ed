@@ -44,22 +44,31 @@ False
 "Card1(rank=2, suit='♠')== Card1(rank=2, suit='♥'): False"
 """
 
+from collections.abc import Iterable
 from functools import total_ordering
-
-from typing import Union, Any
+from typing import Union, Any, cast
 
 CardInt = Union["Card", int]
 
 
 @total_ordering
-class Card(tuple):
+class Card(tuple[str, int]):
     """Rank-only comparisons."""
 
     Suits = "\u2660", "\u2665", "\u2666", "\u2663"
     __slots__ = ()
 
-    def __new__(cls, rank: int, suit: str) -> None:
-        obj = super().__new__(Card, (suit, rank))
+    def __new__(cls, rank: int, suit: str) -> "Card":
+        obj = super().__new__(
+            Card,
+            cast(
+                Iterable[Any],
+                [
+                    suit,
+                    rank,
+                ],
+            ),
+        )
         return obj
 
     def __str__(self) -> str:
@@ -76,7 +85,7 @@ class Card(tuple):
     def __eq__(self, other: Any) -> bool:
         match other:
             case Card():
-                return self.rank == other.rank
+                return self.rank == cast(Card, other).rank
             case int():
                 return self.rank == other
             case _:
@@ -85,7 +94,7 @@ class Card(tuple):
     def __lt__(self, other: Any) -> bool:
         match other:
             case Card():
-                return self.rank < other.rank
+                return self.rank < cast(Card, other).rank
             case int():
                 return self.rank < other
             case _:

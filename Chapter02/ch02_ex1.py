@@ -204,16 +204,18 @@ import math
 def isprimem(n: int) -> bool:
     match n:
         case _ if n < 2:
-            return False
+            prime = False
         case 2:
-            return True
+            prime = True
         case _ if n % 2 == 0:
-            return False
+            prime = False
         case _:
             for i in range(3, 1 + int(math.sqrt(n)), 2):
                 if n % i == 0:
+                    # Stop as soon as we know...
                     return False
-            return True
+            prime = True
+    return prime
 
 
 def test_isprimem() -> None:
@@ -237,7 +239,7 @@ def test_all_isprime() -> None:
     assert isprimem(131071)
 
 
-def namedtuples():
+def namedtuples() -> None:
     """nametuple vs. class performance"""
     from textwrap import dedent
     import timeit
@@ -251,7 +253,7 @@ def namedtuples():
         dedent(
             """
             class X:
-                def __init__( self, a, b, c ):
+                def __init__(self, a, b, c):
                     self.a= a
                     self.b= b
                     self.c= c
@@ -297,7 +299,7 @@ def namedtuples():
     print(f"NamedTuple {typing_nt_time:.4f}")
 
 
-def recursion():
+def recursion() -> None:
     """Recursion Performance Comparison."""
     from textwrap import dedent
     import timeit
@@ -311,7 +313,7 @@ def recursion():
         dedent(
             """
             import math
-            def isprimei( n ):
+            def isprimei(n):
                 if n < 2: return False
                 if n == 2: return True
                 if n % 2 == 0: return False
@@ -332,8 +334,8 @@ def recursion():
         ),
         dedent(
             """
-            def isprimer( n ):
-                def isprime( n, coprime ):
+            def isprimer(n):
+                def isprime(n, coprime):
                     if n < coprime*coprime: return True
                     if n % coprime == 0: return False
                     return isprime( n, coprime+2 )
@@ -356,7 +358,7 @@ def recursion():
         dedent(
             """
             import math
-            def isprimeg( n ):
+            def isprimeg(n):
                 if n < 2: return False
                 if n == 2: return True
                 if n % 2 == 0: return False
@@ -370,7 +372,7 @@ def recursion():
     print(f"{isprimeg_time=:.4f}")
 
 
-def limit_of_performance():
+def limit_of_performance() -> None:
     """We can see that testing a large prime is
     quite slow. Testing large non-primes is quite fast.
 
@@ -390,8 +392,32 @@ def limit_of_performance():
 
 
 from Chapter02.ch02_ex1 import isprimei
-import time
 from functools import reduce
+import time
+from typing import TextIO
+
+# Teasing some material from Chapter 4...
+
+
+def strip_head(source: TextIO, line: str) -> tuple[TextIO, str]:
+    if len(line.strip()) == 0:
+        return source, source.readline()
+    return strip_head(source, source.readline())
+
+
+def get_columns(source: TextIO, line: str) -> Iterator[str]:
+    if line.strip() == "end.":
+        return
+    yield line
+    yield from get_columns(source, source.readline())
+
+
+def parse_g(source: TextIO) -> Iterator[int]:
+    return (
+        int(number_text)
+        for c in get_columns(*strip_head(source, source.readline()))
+        for number_text in c.split()
+    )
 
 
 def performance() -> None:

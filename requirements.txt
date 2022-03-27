@@ -10,6 +10,5 @@ mypy_extensions==0.4.3
 black==19.10b0
 flask==2.0.2
 tox==3.24.5
-# Helpful to have these match tox.ini
+# Helpful to have this match tox.ini
 pytest==6.2.4
-mypy==0.931
