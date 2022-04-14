@@ -20,7 +20,6 @@ REPL_trip = """
 ['LegNT(start=PointNT(latitude=38.330166, longitude=-76.458504),',
  'end=PointNT(latitude=38.976334, longitude=-76.473503),',
  'distance=38.8019)']
-
 """
 
 from Chapter04.ch04_ex1 import haversine

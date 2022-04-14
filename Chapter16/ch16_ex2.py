@@ -46,7 +46,6 @@ REPL_defect_reduce = """
 >>> source_path = Path.cwd() / "qa_data.csv"
 >>> with source_path.open() as input:
 ...     defect_counts = defect_reduce(input)
-
 >>> from pprint import pprint
 
 >>> pprint(defect_counts)
@@ -133,7 +132,6 @@ REPL_summarize_by = """
 >>> source_path = Path.cwd() / "qa_data.csv"
 >>> with source_path.open() as input:
 ...     defect_counts = defect_reduce(input)
-
 >>> from pprint import pprint
 
 >>> pprint(defect_counts)
@@ -182,7 +180,6 @@ REPL_fractions = """
 >>> with source_path.open() as input:
 ...     defect_counts = defect_reduce(input)
 
-
 >>> P_shift = probability_by(lambda s_d: s_d[0], defect_counts)
 >>> P_type = probability_by(lambda s_d: s_d[1], defect_counts)
 
@@ -218,7 +215,6 @@ REPL_expected = """
 >>> source_path = Path.cwd() / "qa_data.csv"
 >>> with source_path.open() as input:
 ...     defect_counts = defect_reduce(input)
-
 
 >>> from pprint import pprint
 
@@ -281,7 +277,6 @@ REPL_contingency_table = """
 >>> with source_path.open() as input:
 ...     defect_counts = defect_reduce(input)
 
-
 >>> contingency_table(expected(defect_counts), defect_counts)
                                Contingency Table                                
 ┏━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━┓
@@ -318,7 +313,6 @@ REPL_chi2 = """
 >>> source_path = Path.cwd() / "qa_data.csv"
 >>> with source_path.open() as input:
 ...     defect_counts = defect_reduce(input)
-
 
 >>> round(float(chi2(defect_counts)), 2)
 19.18

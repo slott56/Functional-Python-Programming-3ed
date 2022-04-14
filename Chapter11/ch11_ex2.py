@@ -34,8 +34,7 @@ REPL_matcher = """
 >>> p2 = re.compile(r"perhaps (\w+) text")
 
 >>> matcher("some text", p1, p2)
-<re.Match object; span=(0, 9), match='some text'>
- 
+<re.Match object; span=(0, 9), match='some text'> 
 """
 
 

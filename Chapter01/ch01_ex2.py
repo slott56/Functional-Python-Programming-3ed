@@ -69,9 +69,9 @@ REPL_repeat = """
 
 REPL_syntax_check = """
 >>> def f():
-...       for x in some_iter: yield x
+...     for x in some_iter: yield x
 >>> def g():
-...       yield from some_iter
+...     yield from some_iter
 """
 
 from collections.abc import Iterator

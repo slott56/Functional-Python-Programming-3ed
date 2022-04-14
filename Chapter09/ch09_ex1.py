@@ -392,19 +392,6 @@ total colors 210303
 
 """
 
-from collections.abc import Sequence
-
-
-def make_color_map(colors: Sequence[Color]) -> dict[RGB, Color]:
-    bit3 = range(0, 256, 0b0010_0000)
-
-    best_iter = (
-        min((euclidean(rgb, c), rgb, c) for c in colors)
-        for rgb in product(bit3, bit3, bit3)
-    )
-    color_map = dict((b[1], b[2]) for b in best_iter)
-    return color_map
-
 
 REPL_make_color_map = """
 >>> colors = get_colors()

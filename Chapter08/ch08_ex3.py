@@ -280,7 +280,6 @@ def subset_rule_iter(source: Iterable[DT], rule: Iterator[bool]) -> Iterator[DT]
 
 all_rows = lambda: repeat(True)
 subset = lambda n: (i == 0 for i in cycle(range(n)))
-
 import random
 
 
@@ -329,7 +328,6 @@ REPL_compress = """
 >>> random_subset = compress(data, randomized(3))
 >>> list(random_subset)
 [3, 2, 2, 4, 2]
-
 """
 
 REPL_islicing_A = """
@@ -343,7 +341,6 @@ REPL_islicing_A = """
 
 >>> flat[-10:]
 [7841, 7853, 7867, 7873, 7877, 7879, 7883, 7901, 7907, 7919]
-
 
 Groups of five
 >>> slices= [flat[i::5] for i in range(5)]
@@ -377,7 +374,6 @@ Non-overlapping pairs
 [(2, 3), (5, 7), (11, 13)]
 >>> pairs[-3:]
 [(7877, 7879), (7883, 7901), (7907, 7919)]
-
 >>> flat_iter_1 = iter(flat)
 >>> flat_iter_2 = iter(flat)
 >>> pairs = list(zip(
@@ -535,7 +531,6 @@ LegNT(start=PointNT(latitude=37.54901619777347, longitude=-76.33029518659048), e
 
 >>> pprint(trip[-1])
 LegNT(start=PointNT(latitude=38.330166, longitude=-76.458504), end=PointNT(latitude=38.976334, longitude=-76.473503), distance=38.801864781785845)
-
 """
 
 

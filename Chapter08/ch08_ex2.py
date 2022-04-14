@@ -164,7 +164,6 @@ def subset_rule_iter(source: Iterable[DT], rule: Iterator[bool]) -> Iterator[DT]
 all_rows = lambda: repeat(True)
 subset = lambda n: (i == 0 for i in cycle(range(n)))
 
-
 import random
 
 

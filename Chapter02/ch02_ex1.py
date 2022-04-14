@@ -125,21 +125,6 @@ def test_isprimer() -> None:
     )
 
 
-def isprimei(n: int) -> bool:
-    """Is n prime?"""
-    if n < 2:
-        return False
-    elif n == 2:
-        return True
-    elif n % 2 == 0:
-        return False
-    else:
-        for i in range(3, 1 + int(math.sqrt(n)), 2):
-            if n % i == 0:
-                return False
-        return True
-
-
 def test_isprimei() -> None:
     assert isprimei(2)
     assert tuple(isprimei(x) for x in range(3, 11)) == (
@@ -155,10 +140,7 @@ def test_isprimei() -> None:
 
 
 REPL_test_isprimei = """
->>> isprimei(2)
-True
->>> tuple(isprimei(x) for x in range(3, 11))
-(True, False, True, False, True, False, False, False)
+
 """
 
 
@@ -390,8 +372,21 @@ def limit_of_performance() -> None:
             print("composite", end=" ")
         print(f"{time.perf_counter() - t:.4f}")
 
+# Teasing some material from chapter 6
 
-from Chapter02.ch02_ex1 import isprimei
+import math
+
+
+def isprimei(n: int) -> bool:
+    if n < 2: return False
+    if n == 2: return True
+    if n % 2 == 0: return False
+    for i in range(3, 1 + int(math.sqrt(n)), 2):
+        if n % i == 0:
+            return False
+    return True
+
+
 from functools import reduce
 import time
 from typing import TextIO
