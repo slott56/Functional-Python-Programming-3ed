@@ -21,6 +21,22 @@ REPL_lambda = """
 131071
 """
 
+REPL_lambda_side_effect = """
+>>> default_zip = lambda row: row.setdefault('ZIP', '00000')
+
+>>> r_0 = {'CITY': 'Vaca Key'}
+>>> default_zip(r_0)
+'00000'
+>>> r_0
+{'CITY': 'Vaca Key', 'ZIP': '00000'}
+
+>>> r_1 = {'CITY': 'Asheville', 'ZIP': 27891}
+>>> default_zip(r_1)
+27891
+
+"""
+
+
 REPL_higher_order = """
 >>> year_cheese = [(2000, 29.87), (2001, 30.12),
 ...     (2002, 30.6), (2003, 30.66), (2004, 31.33),
@@ -123,6 +139,21 @@ def test_isprimer() -> None:
         False,
         False,
     )
+
+
+def isprimei(n: int) -> bool:
+    """Is n prime?"""
+    if n < 2:
+        return False
+    elif n == 2:
+        return True
+    elif n % 2 == 0:
+        return False
+    else:
+        for i in range(3, 1 + int(math.sqrt(n)), 2):
+            if n % i == 0:
+                return False
+        return True
 
 
 def test_isprimei() -> None:
@@ -372,21 +403,8 @@ def limit_of_performance() -> None:
             print("composite", end=" ")
         print(f"{time.perf_counter() - t:.4f}")
 
-# Teasing some material from chapter 6
 
-import math
-
-
-def isprimei(n: int) -> bool:
-    if n < 2: return False
-    if n == 2: return True
-    if n % 2 == 0: return False
-    for i in range(3, 1 + int(math.sqrt(n)), 2):
-        if n % i == 0:
-            return False
-    return True
-
-
+# from Chapter02.ch02_ex1 import isprimei
 from functools import reduce
 import time
 from typing import TextIO
