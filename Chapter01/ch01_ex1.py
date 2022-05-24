@@ -105,7 +105,9 @@ def test_until() -> None:
     assert until(10, lambda x: x % 3 == 0 or x % 5 == 0, 0) == [0, 3, 5, 6, 9]
 
 
-mult_3_5 = lambda x: x % 3 == 0 or x % 5 == 0
+def mult_3_5(x: int) -> bool:
+    return x % 3 == 0 or x % 5 == 0
+
 
 REPL_until = """
 >>> until(10, lambda x: x % 3 == 0 or x % 5 == 0, 0)
@@ -120,8 +122,6 @@ def sum_functional_1(limit: int = 10) -> int:
 
 
 def sum_functional(limit: int = 10) -> int:
-    mult_3_5 = lambda x: x % 3 == 0 or x % 5 == 0
-    add = lambda x, y: x + y
     return sumr(until(limit, mult_3_5, 0))
 
 
