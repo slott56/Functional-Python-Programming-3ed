@@ -110,21 +110,13 @@ True
 
 
 def isprimer(n: int) -> bool:
-    def isprime_odd(k: int, coprime: int) -> bool:
-        """Is k coprime with the coprime value?"""
-        if k < coprime * coprime:
+    def iscoprime(k: int, a: int, b: int) -> bool:
+        """Is k coprime with a value in the given range?"""
+        if a == b:
             return True
-        if k % coprime == 0:
-            return False
-        return isprime_odd(k, coprime + 2)
+        return (k % a != 0) and iscoprime(k, a + 1, b)
 
-    if n < 2:
-        return False
-    if n == 2:
-        return True
-    if n % 2 == 0:
-        return False
-    return isprime_odd(n, 3)
+    return iscoprime(n, 2, int(math.sqrt(n)) + 1)
 
 
 def test_isprimer() -> None:
@@ -347,16 +339,12 @@ def recursion() -> None:
         ),
         dedent(
             """
-            def isprimer(n):
-                def isprime(n, coprime):
-                    if n < coprime*coprime: return True
-                    if n % coprime == 0: return False
-                    return isprime( n, coprime+2 )
-            
-                if n < 2: return False
-                if n == 2: return True
-                if n % 2 == 0: return False
-                return isprime( n, 3 )
+            import math
+            def isprimer(n: int) -> bool:
+                def iscoprime(k: int, a: int, b: int) -> bool:
+                    if a == b: return True
+                    return (k % a != 0) and iscoprime(k, a+1, b)
+                return iscoprime(n, 2, int(math.sqrt(n)) + 1)
         """
         ),
         number=100_000,
