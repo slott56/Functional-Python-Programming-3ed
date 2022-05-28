@@ -84,7 +84,7 @@ def test_null2() -> None:
     """Note that mypy spots several suspicious constructs."""
     ndivmod = null2(divmod)
     assert ndivmod(None, 2) is None  # type: ignore[arg-type]
-    assert ndivmod(2, None) is None  # type: ignore[arg-type]
+    assert ndivmod(2, None) is None  # type: ignore[misc]
     with pytest.raises(TypeError):
         ndivmod("22", "7")  # type: ignore[arg-type]
 
@@ -113,14 +113,14 @@ def test_logged_divmod_1(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
     ldivmod = logged(divmod)
     with pytest.raises(TypeError):
-        ldivmod(3, None)  # type: ignore[arg-type]
+        ldivmod(3, None)  # type: ignore[misc]
     assert caplog.text.startswith("ERROR    divmod:ch12_ex1.py:")
 
 
 def test_logged_divmod_2(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
     ldivmod = logged(divmod)
-    ldivmod(22, 7)  # type: ignore[arg-type]
+    ldivmod(22, 7)
     assert caplog.text.startswith("INFO     divmod:ch12_ex1.py:")
 
 

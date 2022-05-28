@@ -2,15 +2,20 @@
 
 Chapter 15, Test Configuration
 """
+from collections.abc import Iterator
 from pathlib import Path
 import subprocess
 import time
 
 import pytest
 
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers", "server_file(file): mark test to use a specific file"
+    )
 
 @pytest.fixture
-def running_server(request) -> Path:
+def running_server(request: pytest.FixtureRequest) -> Iterator[Path]:
     """
     Runs the named module as a WSGI server.
     Ideally, this is scope="module"

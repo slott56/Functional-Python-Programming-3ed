@@ -380,15 +380,15 @@ REPL_mask = """
 REPL_simplify_colors = """
 >>> palette = gather_colors()
 total pixels 9980928
-total colors 210303
+total colors 194537
 >>> masks = [0b11100000, 0b11110000, 0b11111000, 0b11111100]
 >>> subsets = {m: simplify_colors(palette, m) for m in masks}
 >>> for m in masks:
 ...     print(bin(m), len(subsets[m]))
-0b11100000 214
-0b11110000 1150
-0b11111000 5845
-0b11111100 27725
+0b11100000 202
+0b11110000 1048
+0b11111000 5296
+0b11111100 25182
 
 """
 

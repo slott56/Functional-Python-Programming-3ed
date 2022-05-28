@@ -71,7 +71,7 @@ def factr(n: int) -> int:
         return n * factr(n - 1)
 
 
-binom_example = """
+REPL_binom_example = """
 >>> binom = Binomial()
 >>> binom(52, 5)
 2598960
