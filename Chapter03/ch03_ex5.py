@@ -96,7 +96,7 @@ Color(red=205, green=149, blue=117, name='Antique Brass')
 Color(red=255, green=174, blue=66, name='Yellow Orange')
 """
 
-### TODO: Some of this should go to Chapter 7
+### Some of this is teaser material for topics in Chapter 7
 
 example = """GIMP Palette
 Name: Small
@@ -228,36 +228,38 @@ REPL_test_gpl = """
 (Color(red=0, green=0, blue=0, name='Black'), Color(red=255, green=255, blue=255, name='White'), Color(red=238, green=32, blue=77, name='Red'), Color(red=28, green=172, blue=120, name='Green'), Color(red=31, green=117, blue=254, name='Blue'))
 """
 
-### Back to Chapter 3
+### End of the Chapter 7 side-bar...
+### Back to Chapter 3 test cases.
 
 import bisect
-from collections.abc import Mapping, Iterator, Iterable, Hashable
+from collections.abc import Mapping, Iterable
 from typing import Any
 
 
-class StaticMapping(Mapping[Hashable, Any]):
-    """
-    >>> import io
-    >>> c = StaticMapping( (c.name, c) for c in color_GPL_r(io.StringIO(example)) )
-    >>> c.get("Black")
-    Color(red=0, green=0, blue=0, name='Black')
-    """
+class StaticMapping(Mapping[str, Color]):
+    def __init__(self, iterable: Iterable[tuple[str, Color]]) -> None:
+        self._data: tuple[tuple[str, Color], ...] = tuple(iterable)
+        self._keys: tuple[str, ...] = tuple(sorted(key for key, _ in self._data))
 
-    def __init__(self, iterable: Iterable[tuple[Any, Any]]) -> None:
-        self._data = tuple(iterable)
-        self._keys = tuple(sorted(key for key, _ in self._data))
-
-    def __getitem__(self, key: Any) -> Any:
+    def __getitem__(self, key: str) -> Color:
         ix = bisect.bisect_left(self._keys, key)
         if ix != len(self._keys) and self._keys[ix] == key:
             return self._data[ix][1]
-        raise ValueError("{0!r} not found".format(key))
+        raise ValueError(f"{key!r} not found")
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator[str]:
         return iter(self._keys)
 
     def __len__(self) -> int:
         return len(self._keys)
+
+
+REPL_static_mapping = """
+>>> import io
+>>> c = StaticMapping( (c.name, c) for c in color_GPL_r(io.StringIO(example)) )
+>>> c.get("Black")
+Color(red=0, green=0, blue=0, name='Black')
+"""
 
 
 def test_static_mapping() -> None:

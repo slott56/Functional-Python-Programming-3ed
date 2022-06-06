@@ -318,13 +318,7 @@ REPL_mean = """
 >>> series_I
 (('10.0', '8.04'), ('8.0', '6.95'), ... ('5.0', '5.68'))
 
->>> for subset in series_I, series_II, series_III, series_IV:
-...     mean = sum(float(pair[1]) for pair in subset)/len(subset)
-...     print( round(mean,3) )
-7.501
-7.501
-7.5
-7.501
+
 """
 
 __test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}

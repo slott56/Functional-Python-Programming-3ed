@@ -3,17 +3,7 @@
 Chapter 3, Example Set 1
 """
 from typing import Callable
-
-
-def m(n: int) -> int:
-    p: int = 2 ** n - 1
-    return p
-
-
-def test_m() -> None:
-    assert m(61) == 2 ** 61 - 1
-    assert m(89) == 618970019642690137449562111
-
+import pytest
 
 global_adjustment: float
 
@@ -28,6 +18,21 @@ def test_some_function() -> None:
     assert some_function(2, 3, 5) == 2 + 3 * 5 + global_adjustment
 
 
+from pathlib import Path
+
+
+def write_file(some_path: Path) -> None:
+    result = "Hello, world!"
+    with some_path.open("w") as output_file:
+        output_file.write(result + "\n")
+
+
+def test_write_file(tmp_path: Path) -> None:
+    target = tmp_path / "write_file.out"
+    write_file(target)
+    assert target.read_text() == "Hello, world!\n"
+
+
 from typing import TextIO
 
 ifile: TextIO
@@ -35,9 +40,28 @@ ofile: TextIO
 
 
 def open_files(iname: str, oname: str) -> None:
+    """A bad idea..."""
     global ifile, ofile
     ifile = open(iname, "r")
     ofile = open(oname, "w")
+
+
+def next_line_with(prefix: str) -> str | None:
+    """Also a bad idea..."""
+    line = ifile.readline()
+    while line is not None and not line.startswith(prefix):
+        line = ifile.readline()
+    return line
+
+
+def test_bad_ideas(tmp_path: Path) -> None:
+    input = tmp_path / "bad_idea.in"
+    input.write_text("Line 1\n* Line 2\n")
+    output = tmp_path / "bad_idea.out"
+
+    open_files(str(input), str(output))
+    text = next_line_with("*")
+    assert text == "* Line 2\n"
 
 
 from collections.abc import Callable
@@ -91,6 +115,13 @@ def test_mersenne_1() -> None:
     assert m1f(17) == 131071
 
 
+REPL_test_mersenne1 = """
+>>> m1s(17)
+131071
+>>> m1f(89)
+618970019642690137449562111
+"""
+
 # Alternative Mersenne using class-level configuration.
 # The syntax seems more awkward.
 
@@ -98,25 +129,26 @@ from typing import cast
 
 
 class Mersenne2:
+    """Requires client use ``staticmethod()``."""
+
     pow2: Callable[[int], int]
 
     def __call__(self, arg: int) -> int:
-        # Awkward approach to avoiding a self. reference
-        # This is *NOT* a method, but methods are the assumption
-        pow2 = getattr(self, "pow2")
-        return cast(int, pow2(arg) - 1)
+        # Disconnect this from being a ``self.pow2()`` reference.
+        f: Callable[[int], int] = getattr(self, "pow2")
+        return f(arg) - 1
 
 
 class ShiftyMersenne(Mersenne2):
-    pow2 = shifty
+    pow2 = staticmethod(shifty)
 
 
 class MultyMersenee(Mersenne2):
-    pow2 = multy
+    pow2 = staticmethod(multy)
 
 
 class FasterMersenne(Mersenne2):
-    pow2 = faster
+    pow2 = staticmethod(faster)
 
 
 m2s = ShiftyMersenne()
@@ -134,6 +166,12 @@ def test_mersenne() -> None:
     assert m1s(89) == 618970019642690137449562111
     assert m1m(89) == 618970019642690137449562111
     assert m1f(89) == 618970019642690137449562111
+    with pytest.raises(RecursionError):
+        assert m1m(1279) == 0
+    assert (
+        m1f(1279)
+        == 10407932194664399081925240327364085538615262247266704805319112350403608059673360298012239441732324184842421613954281007791383566248323464908139906605677320762924129509389220345773183349661583550472959420547689811211693677147548478866962501384438260291732348885311160828538416585028255604666224831890918801847068222203140521026698435488732958028878050869736186900714720710555703168729087
+    )
 
 
 __test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}

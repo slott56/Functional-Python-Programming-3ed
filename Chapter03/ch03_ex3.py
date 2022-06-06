@@ -5,7 +5,48 @@ Chapter 3, Example Set 3
 
 import math
 
+REPL_comprehension = """
+>>> list(x**2 for x in range(10)) == [x**2 for x in range(10)]
+True
+"""
+
 from collections.abc import Iterator
+
+
+def candidates() -> Iterator[int]:
+    for i in range(2, 1024):
+        yield m1f(i)
+
+
+REPL_yield_statement = """
+>>> c = candidates()
+>>> next(c)
+3
+>>> next(c)
+7
+>>> next(c)
+15
+>>> next(c)
+31
+"""
+
+from Chapter03.ch03_ex1 import m1f
+
+from collections.abc import Iterator
+
+
+def bunch_of_numbers() -> Iterator[int]:
+    for i in range(5):
+        yield from range(i)
+
+
+REPL_yield_from_statement = """
+>>> list(bunch_of_numbers())
+[0, 0, 1, 0, 1, 2, 0, 1, 2, 3]
+"""
+
+from collections.abc import Iterator
+import math
 
 
 def pfactorsl(x: int) -> Iterator[int]:
@@ -140,26 +181,26 @@ from collections.abc import Callable
 
 
 def syntax_check_1() -> None:
-    R = 2
+    some_iterable = range(2)
     g: Callable[[int], int] = lambda x: x + 1
     f: Callable[[int], int] = lambda y: y * 2
-    g_f_x = (g(f(x)) for x in range(R))
+    g_f_x = (g(f(x)) for x in some_iterable)
     assert list(g_f_x) == [1, 3]
 
 
 def syntax_check_2() -> None:
-    R = 2
+    some_iterable = range(2)
     g: Callable[[int], int] = lambda x: x + 1
     f: Callable[[int], int] = lambda y: y * 2
-    g_f_x = (g(y) for y in (f(x) for x in range(R)))
+    g_f_x = (g(y) for y in (f(x) for x in some_iterable))
     assert list(g_f_x) == [1, 3]
 
 
 def syntax_check_3() -> None:
-    R = 2
+    some_iterable = range(2)
     g: Callable[[int], int] = lambda x: x + 1
     f: Callable[[int], int] = lambda y: y * 2
-    f_x = (f(x) for x in range(R))
+    f_x = (f(x) for x in some_iterable)
     g_f_x = (g(y) for y in f_x)
     assert list(g_f_x) == [1, 3]
 
