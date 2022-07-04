@@ -12,12 +12,12 @@ def syntax_check_1() -> None:
 
 REPL_quantized = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(source_url) as source:
-...    path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...    path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...    trip = tuple((start, end, round(haversine(start, end),4))
 ...        for start, end in legs(path))
 
@@ -160,12 +160,12 @@ def test_group_by() -> None:
 
 REPL_group_by = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(source_url) as source:
-...    path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...    path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...    trip = tuple((start, end, round(haversine(start, end),4))
 ...        for start,end in legs(path))
 
@@ -282,12 +282,12 @@ REPL_test_extractors = """
 
 REPL_test_sorted_max = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(source_url) as source:
-...    path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...    path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...    trip = tuple((start, end, round(haversine(start, end),4))
 ...        for start, end in legs(path))
 

@@ -64,14 +64,14 @@ def group_Counter(trip: Iterable[Leg]) -> list[tuple[int, int]]:
 REPL_trip1 = """
 >>> import urllib.request
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> from Chapter03.ch03_ex3 import limits
 
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(source_url) as source:
 ...     trip = tuple((start, end, round(haversine(start, end),4))
-...         for start,end in legs(float_from_pair(float_lat_lon(row_iter_kml(source)))))
+...         for start,end in legs(floats_from_pair(float_lat_lon(row_iter_kml(source)))))
 
 >>> start, end, dist = trip[0]
 >>> start, end, dist
@@ -116,13 +116,13 @@ we'll see that the ``limits()`` function doesn't really do what we hoped.
 
 >>> import urllib.request
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> from Chapter03.ch03_ex3 import limits
 
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(source_url) as source:
-...    path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...    path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 
 This consumes the interable...
 

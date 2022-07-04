@@ -12,13 +12,13 @@ REPL_max = """
 
 REPL_long_short = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> data = "file:./Winter%202012-2013.kml"
 
 >>> with urllib.request.urlopen(data) as source:
-...     path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...     trip = tuple(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
@@ -48,13 +48,13 @@ def unwrap(dist_leg: tuple[Any, Any]) -> Any:
 
 REPL_long_short_2 = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> data = "file:./Winter%202012-2013.kml"
 
 >>> with urllib.request.urlopen(data) as source:
-...     path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...     trip = tuple(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
@@ -77,13 +77,13 @@ def by_dist(leg: tuple[Any, Any, Any]) -> Any:
 
 REPL_long_short_3 = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> data = "file:./Winter%202012-2013.kml"
 
 >>> with urllib.request.urlopen(data) as source:
-...     path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...     trip = tuple(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
@@ -121,13 +121,13 @@ def test_max_like() -> None:
 
 REPL_test_long_short_4 = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> data = "file:./Winter%202012-2013.kml"
 
 >>> with urllib.request.urlopen(data) as source:
-...     path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...     trip = tuple(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
@@ -187,13 +187,13 @@ REPL_test_long_short_5 = """
 
 REPL_sm_trip = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> data = "file:./Winter%202012-2013.kml"
 
 >>> with urllib.request.urlopen(data) as source:
-...     path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...     trip = tuple(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
@@ -289,13 +289,13 @@ REPL_zip_demo = """
 REPL_distance = """
 
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine
 ... )
 >>> import urllib.request
 
 >>> data = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(data) as source:
-...     path_gen = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...     path_gen = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...     path = list(path_gen)
 
 >>> distances_1 = map(
@@ -348,13 +348,13 @@ REPL_filter_fizz_buzz = """
 
 REPL_outliers = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> data = "file:./Winter%202012-2013.kml"
 
 >>> with urllib.request.urlopen(data) as source:
-...     path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...     trip = tuple(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
@@ -383,13 +383,13 @@ REPL_iter = """
 
 REPL_sorted = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> data = "file:./Winter%202012-2013.kml"
 
 >>> with urllib.request.urlopen(data) as source:
-...     path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...     trip = tuple(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
@@ -494,13 +494,13 @@ to_miles_sel2: Callable[[tuple[Any, Any, float]], float] = lambda s_e_d: to_mile
 
 REPL_test_convert = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> data = "file:./Winter%202012-2013.kml"
 
 >>> with urllib.request.urlopen(data) as source:
-...     path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...     trip = tuple(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
@@ -551,13 +551,13 @@ def cons_distance(
 
 REPL_test_cons_distance = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(source_url) as source:
-...    path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...    path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...    trip2 = tuple(cons_distance(haversine, legs(iter(path))))
 
 >>> trip2[0]
@@ -579,12 +579,12 @@ def cons_distance3(
 
 REPL_test_cons_distance3 = """
 >>> from Chapter04.ch04_ex1 import (
-...    float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(source_url) as source:
-...    path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...    path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...    trip3 = tuple(cons_distance3( haversine, legs(iter(path))))
 
 >>> trip3[0]
