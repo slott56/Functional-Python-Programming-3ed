@@ -110,7 +110,7 @@ def mult_3_5(x: int) -> bool:
 
 
 REPL_until = """
->>> until(10, lambda x: x % 3 == 0 or x % 5 == 0, 0)
+>>> until(10, mult_3_5, 0)
 [0, 3, 5, 6, 9]
 """
 

@@ -52,12 +52,12 @@ def by_dist(leg: Leg) -> float:
 
 REPL_max_alternatives = """
 >>> from Chapter04.ch04_ex1 import (
-...     float_from_pair, float_lat_lon, row_iter_kml, legs,
+...     floats_from_pair, float_lat_lon, row_iter_kml, legs,
 ...     haversine)
 >>> import urllib.request
 >>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
-...    path= float_from_pair(float_lat_lon(row_iter_kml(source)))
-...    trip= tuple( (start, end, round(haversine(start, end),4))
+...    path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
+...    trip = tuple( (start, end, round(haversine(start, end),4))
 ...        for start,end in legs(path))
 
 >>> long = max(dist for start, end, dist in trip)
@@ -107,12 +107,12 @@ lon: Callable[[tuple[Any, ...]], Any] = lambda x: x[1]
 
 REPL_min_max = """
 >>> from Chapter04.ch04_ex1 import (
-...     float_from_pair, float_lat_lon, row_iter_kml, legs,
+...     floats_from_pair, float_lat_lon, row_iter_kml, legs,
 ...     haversine)
 >>> import urllib.request
 >>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
-...    path= float_from_pair(float_lat_lon(row_iter_kml(source)))
-...    trip= tuple( (start, end, round(haversine(start, end),4))
+...    path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
+...    trip = tuple( (start, end, round(haversine(start, end),4))
 ...        for start,end in legs(path))
 
 >>> long, short = max(trip, key=dist), min(trip, key=dist)
@@ -129,12 +129,12 @@ REPL_min_max = """
 
 REPL_conversion = """
 >>> from Chapter04.ch04_ex1 import (
-...     float_from_pair, float_lat_lon, row_iter_kml, legs,
+...     floats_from_pair, float_lat_lon, row_iter_kml, legs,
 ...     haversine)
 >>> import urllib.request
 >>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
-...    path= float_from_pair(float_lat_lon(row_iter_kml(source)))
-...    trip= tuple( (start, end, round(haversine(start, end),4))
+...    path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
+...    trip = tuple( (start, end, round(haversine(start, end),4))
 ...        for start,end in legs(path))
 
 >>> statute1 = list( (start(x),end(x),dist(x)*6076.12/5280) for x in trip )

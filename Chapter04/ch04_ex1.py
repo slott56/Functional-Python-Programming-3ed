@@ -37,7 +37,7 @@ def row_iter_kml(file_obj: TextIO) -> Iterable[list[str]]:
     )
     doc = XML.parse(file_obj)
     text_blocks = (
-        coordinates.text for coordinates in doc.findall(path_to_points, ns_map)
+        coordinates.text for coordinates in doc.iterfind(path_to_points, ns_map)
     )
     return (comma_split(text) for text in text_blocks if text is not None)
 
@@ -71,6 +71,20 @@ def test_row_iter_kml() -> None:
 
 def comma_split(text: str) -> list[str]:
     return text.split(",")
+
+
+REPL_raw_data = """
+>>> from pprint import pprint
+>>> source_url = "file:./Winter%202012-2013.kml"
+>>> with urllib.request.urlopen(source_url) as source:
+...     v1 = list(row_iter_kml(source))
+>>> pprint(v1)  # doctest: +ELLIPSIS
+[['-76.33029518659048', '37.54901619777347', '0'],
+ ['-76.27383399999999', '37.840832', '0'],
+ ['-76.459503', '38.331501', '0'],
+ ...
+ ['-76.47350299999999', '38.976334', '0']]
+"""
 
 
 def test_comma_split() -> None:
@@ -273,25 +287,6 @@ def legs_filter(
         begin = end
 
 
-#
-# from typing import Any, TypeVar
-# from collections.abc import Iterator, Iterable, Callable
-#
-# # Pairs_Iter = Iterator[tuple[float, float]]
-# Leg = tuple[tuple[float, float], tuple[float, float]]
-# Leg_Iter = Iterable[Leg]
-# def legs_filter(
-#         lat_lon_iter: Pairs_Iter,
-#         rejection_rule: Callable[[tuple[float, float], tuple[float, float]], bool]) -> Leg_Iter:
-#     begin = next(lat_lon_iter)
-#     for end in lat_lon_iter:
-#         if rejection_rule(begin, end):
-#             pass
-#         else:
-#             yield begin, end
-#         begin = end
-
-
 def test_legs_filter() -> None:
     trip = iter([(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (0, 1), (0, 0)])
     some_rule = lambda b, e: b[0] == 0
@@ -339,31 +334,22 @@ Text_Iter = Iterable[tuple[str, str]]
 LL_Iter = Iterable[tuple[float, float]]
 
 
-def float_from_pair(lat_lon_iter: Text_Iter) -> LL_Iter:
+def floats_from_pair(lat_lon_iter: Text_Iter) -> LL_Iter:
     return ((float(lat), float(lon)) for lat, lon in lat_lon_iter)
 
 
-#
-# from collections.abc import Iterator, Iterable
-# Text_Iter = Iterable[tuple[str, str]]
-# LL_Iter = Iterable[tuple[float, float]]
-#
-# def float_from_pair(lat_lon_iter: Text_Iter) -> LL_Iter:
-#     return ((float(lat), float(lon)) for lat, lon in lat_lon_iter)
-
-
-def test_float_from_pair() -> None:
+def test_floats_from_pair() -> None:
     trip = [("1", "2"), ("2.718", "3.142")]
-    assert tuple(float_from_pair(trip)) == ((1.0, 2.0), (2.718, 3.142))
+    assert tuple(floats_from_pair(trip)) == ((1.0, 2.0), (2.718, 3.142))
 
 
-REPL_float_from_pair = """
+REPL_floats_from_pair = """
 >>> import urllib
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(source_url) as source:
 ...     trip = list(
 ...         legs(
-...             float_from_pair(
+...             floats_from_pair(
 ...                 lat_lon_kml(
 ...                     row_iter_kml(source))))
 ...     )
@@ -410,7 +396,11 @@ REPL_haversine_demo = """
 ...     trip = (
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start,end in
-...             legs(float_from_pair(lat_lon_kml(row_iter_kml(source))))
+...             legs(
+...                 floats_from_pair(
+...                     lat_lon_kml(row_iter_kml(source))
+...                 )
+...             )
 ...     )
 ...     for start, end, dist in trip:
 ...         print(f"({start} to {end} is {dist:.1f}")
@@ -446,7 +436,7 @@ REPL_test_parse_2 = """
 ((38.330166, -76.458504), (38.976334, -76.473503))
 
 >>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
-...     v2 = tuple(legs( float_from_pair(lat_lon_kml(row_iter_kml(source)))))
+...     v2 = tuple(legs( floats_from_pair(lat_lon_kml(row_iter_kml(source)))))
 >>> len(v2)
 73
 >>> v2[0]

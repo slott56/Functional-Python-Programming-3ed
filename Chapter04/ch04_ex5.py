@@ -357,11 +357,11 @@ REPL_zip_group = """
 from collections.abc import Iterator
 
 
-def digits(x: int, b: int) -> Iterator[int]:
+def digits(x: int, base: int) -> Iterator[int]:
     if x == 0:
         return
-    yield x % b
-    yield from digits(x // b, b)
+    yield x % base
+    yield from digits(x // base, base)
 
 
 def test_digits() -> None:
@@ -369,8 +369,8 @@ def test_digits() -> None:
     assert tuple(digits(126, 16)) == (14, 7)
 
 
-def to_base(x: int, b: int) -> Iterator[int]:
-    return reversed(tuple(digits(x, b)))
+def to_base(x: int, base: int) -> Iterator[int]:
+    return reversed(tuple(digits(x, base)))
 
 
 def test_to_base() -> None:

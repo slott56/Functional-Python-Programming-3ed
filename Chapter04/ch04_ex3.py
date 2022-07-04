@@ -33,7 +33,7 @@ def stdev(data: Sequence[float]) -> float:
     s2 = sum(x ** 2 for x in data)
 
     mean = s1 / s0
-    stdev = math.sqrt(s2 / s0 - (s1 / s0) ** 2)
+    stdev = math.sqrt(s2 / s0 - mean ** 2)
     return stdev
 
 
@@ -69,11 +69,11 @@ REPL_test_mean_stdev_z = """
 
 REPL_filter_sorted = """
 >>> from Chapter04.ch04_ex1 import (
-...     float_from_pair, float_lat_lon, row_iter_kml, legs,
+...     floats_from_pair, float_lat_lon, row_iter_kml, legs,
 ...     haversine)
 >>> import urllib.request
 >>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
-...    path = float_from_pair(float_lat_lon(row_iter_kml(source)))
+...    path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
 ...    trip = tuple((start, end, round(haversine(start, end),4))
 ...        for start, end in legs(path))
 
@@ -113,11 +113,11 @@ Outliers [((29.050501, -80.651169), (27.186001, -80.139503), 115.1751), ((27.154
 
 REPL_map = """
 >>> from Chapter04.ch04_ex1 import (
-...     float_from_pair, float_lat_lon, row_iter_kml, haversine, legs
+...     floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
 ... )
 >>> import urllib.request
 >>> with urllib.request.urlopen("file:./Winter%202012-2013.kml") as source:
-...    path= tuple(float_from_pair(float_lat_lon(row_iter_kml(source))))
+...    path= tuple(floats_from_pair(float_lat_lon(row_iter_kml(source))))
 ...    trip= tuple((start, end, round(haversine(start, end),4))
 ...        for start, end in legs(iter(path)))
 
