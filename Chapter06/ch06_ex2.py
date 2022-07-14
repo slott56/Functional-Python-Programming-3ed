@@ -24,7 +24,8 @@ REPL_quantized = """
 >>> len(trip)
 73
 
-See Chapter 4 for ways to parse "file:./Winter%202012-2013.kml"
+# See Chapter 4 for ways to parse "file:./Winter%202012-2013.kml"
+# We want to build a trip variable with the sequence of tuples.
 
 >>> from collections import Counter
 
@@ -108,13 +109,13 @@ def group_by(
     def group_into(
         key: Callable[[SeqItemT], ItemKeyT],
         collection: Sequence[SeqItemT],
-        dictionary: dict[ItemKeyT, list[SeqItemT]],
+        group_dict: dict[ItemKeyT, list[SeqItemT]],
     ) -> dict[ItemKeyT, list[SeqItemT]]:
         if len(collection) == 0:
-            return dictionary
+            return group_dict
         head, *tail = collection
-        dictionary[key(head)].append(head)
-        return group_into(key, tail, dictionary)
+        group_dict[key(head)].append(head)
+        return group_into(key, tail, group_dict)
 
     return group_into(key, data, defaultdict(list))
 
@@ -203,11 +204,11 @@ KeyT = TypeVar("KeyT", bound=Hashable)
 def partition(
     key: Callable[[SeqT], KeyT], data: Iterable[SeqT]
 ) -> dict[KeyT, list[SeqT]]:
-    dictionary: dict[KeyT, list[SeqT]] = defaultdict(list)
+    group_dict: dict[KeyT, list[SeqT]] = defaultdict(list)
     for head in data:
-        dictionary[key(head)].append(head)
+        group_dict[key(head)].append(head)
         # ---------------------------------
-    return dictionary
+    return group_dict
 
 
 def test_partition() -> None:
@@ -338,15 +339,15 @@ REPL_test_sorted_max = """
 from collections.abc import Sequence
 
 
-def s0(data: Sequence[float]) -> float:
+def sum_x0(data: Sequence[float]) -> float:
     return sum(1 for x in data)  # or len(data)
 
 
-def s1(data: Sequence[float]) -> float:
+def sum_x1(data: Sequence[float]) -> float:
     return sum(x for x in data)  # or sum(data)
 
 
-def s2(data: Sequence[float]) -> float:
+def sum_x2(data: Sequence[float]) -> float:
     return sum(x * x for x in data)
 
 
@@ -373,7 +374,7 @@ REPL_sum_f = """
 659.9762
 """
 
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable
 
 
 def sum_filter_f(
@@ -401,9 +402,9 @@ from typing import cast
 
 def test_mean_f() -> None:
     data_1 = [7.46, 6.77, 12.74, 7.11, 7.81, 8.84, 6.08, 5.39, 8.15, 6.42, 5.73]
-    assert s0(data_1) == 11
-    assert s1(data_1) == approx(82.5)
-    assert s2(data_1) == approx(659.9762)
+    assert sum_x0(data_1) == 11
+    assert sum_x1(data_1) == approx(82.5)
+    assert sum_x2(data_1) == approx(659.9762)
     assert mean_f(lambda x: True, data_1) == approx(7.5)
 
     data_2: list[Any] = [None, None] + data_1[:5] + [None] + data_1[5:] + [None, None, None]  # type: ignore [operator]

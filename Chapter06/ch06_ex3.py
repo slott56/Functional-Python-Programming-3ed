@@ -139,7 +139,7 @@ REPL_test_kml_parser = """
 >>> import urllib.request
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(source_url) as source:
-...      flat = tuple(float_lat_lon(row_iter_kml(source)))
+...      flat = list(float_lat_lon(row_iter_kml(source)))
 >>> len(flat)
 74
 >>> flat[0]
@@ -147,6 +147,11 @@ REPL_test_kml_parser = """
 >>> flat[-1]
 (38.976334, -76.473503)
 
+>>> from pprint import pprint
+>>> pprint(flat)  # doctest: +ELLIPSIS
+[(37.54901619777347, -76.33029518659048),
+ ...
+ (38.976334, -76.473503)]
 """
 
 from collections.abc import Iterator
@@ -162,7 +167,7 @@ def row_iter_csv(source: TextIO) -> Iterator[list[str]]:
 from typing import cast
 
 
-def float_none(data: str) -> float | None:
+def float_or_none(data: str) -> float | None:
     try:
         data_f = float(data)
         return data_f
@@ -174,7 +179,7 @@ from collections.abc import Callable
 
 R_Float = list[float | None]
 
-float_row: Callable[[list[str]], R_Float] = lambda row: list(map(float_none, row))
+float_row: Callable[[list[str]], R_Float] = lambda row: list(map(float_or_none, row))
 all_numeric: Callable[[R_Float], bool] = lambda row: all(row) and len(row) == 8
 
 

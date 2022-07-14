@@ -10,6 +10,17 @@ REPL_max = """
 4
 """
 
+REPL_example = """
+[
+ ((37.54901619777347, -76.33029518659048), (37.840832, -76.273834), 17.7246),
+ ((37.840832, -76.273834), (38.331501, -76.459503), 30.7382),
+ ((38.331501, -76.459503), (38.845501, -76.537331), 31.0756),
+ ((36.843334, -76.298668), (37.549, -76.331169), 42.3962),
+ ((37.549, -76.331169), (38.330166, -76.458504), 47.2866),
+ ((38.330166, -76.458504), (38.976334, -76.473503), 38.8019)
+]
+"""
+
 REPL_long_short = """
 >>> from Chapter04.ch04_ex1 import (
 ...    floats_from_pair, float_lat_lon, row_iter_kml, haversine, legs
@@ -19,17 +30,17 @@ REPL_long_short = """
 
 >>> with urllib.request.urlopen(data) as source:
 ...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
-...     trip = tuple(
+...     trip = list(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
 ...     )
 
->>> long = max(dist for start, end, dist in trip)
->>> short = min(dist for start, end, dist in trip)
+>>> longest = max(dist for start, end, dist in trip)
+>>> shortest = min(dist for start, end, dist in trip)
 
->>> long
+>>> longest
 129.7748
->>> short
+>>> shortest
 0.1731
 """
 
@@ -55,17 +66,17 @@ REPL_long_short_2 = """
 
 >>> with urllib.request.urlopen(data) as source:
 ...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
-...     trip = tuple(
+...     trip = list(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
 ...     )
 
->>> long = unwrap(max(wrap(trip)))
->>> long
+>>> longest = unwrap(max(wrap(trip)))
+>>> longest
 ((27.154167, -80.195663), (29.195168, -81.002998), 129.7748)
 
->>> short = unwrap(min(wrap(trip)))
->>> short
+>>> shortest = unwrap(min(wrap(trip)))
+>>> shortest
 ((35.505665, -76.653664), (35.508335, -76.654999), 0.1731)
 """
 
@@ -84,17 +95,17 @@ REPL_long_short_3 = """
 
 >>> with urllib.request.urlopen(data) as source:
 ...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
-...     trip = tuple(
+...     trip = list(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
 ...     )
 
->>> long = max(trip, key=by_dist)
->>> long
+>>> longest = max(trip, key=by_dist)
+>>> longest
 ((27.154167, -80.195663), (29.195168, -81.002998), 129.7748)
 
->>> short = min(trip, key=by_dist)
->>> short
+>>> shortest = min(trip, key=by_dist)
+>>> shortest
 ((35.505665, -76.653664), (35.508335, -76.654999), 0.1731)
 """
 
@@ -128,17 +139,17 @@ REPL_test_long_short_4 = """
 
 >>> with urllib.request.urlopen(data) as source:
 ...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
-...     trip = tuple(
+...     trip = list(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
 ...     )
 
->>> long = max(trip, key=lambda leg: leg[2])
->>> short = min(trip, key=lambda leg: leg[2])
+>>> longest = max(trip, key=lambda leg: leg[2])
+>>> shortest = min(trip, key=lambda leg: leg[2])
 
->>> long
+>>> longest
 ((27.154167, -80.195663), (29.195168, -81.002998), 129.7748)
->>> short
+>>> shortest
 ((35.505665, -76.653664), (35.508335, -76.654999), 0.1731)
 """
 
@@ -149,15 +160,17 @@ end = lambda x: x[1]
 dist = lambda x: x[2]
 
 REPL_test_long_short_5 = """
->>> long = ((27.154167, -80.195663), (29.195168, -81.002998), 129.7748)
->>> dist(long)
+>>> longest = ((27.154167, -80.195663), (29.195168, -81.002998), 129.7748)
+>>> dist(longest)
 129.7748
 
->>> start(long)
+>>> from operator import itemgetter 
+>>> start = itemgetter(0)
+>>> start(longest)
 (27.154167, -80.195663)
->>> lat = lambda x: x[0]
->>> lon = lambda x: x[1]
->>> lat(start(long))
+>>> lat = itemgetter(0)
+>>> lon = itemgetter(1)
+>>> lat(start(longest))
 27.154167
 """
 
@@ -194,10 +207,15 @@ REPL_sm_trip = """
 
 >>> with urllib.request.urlopen(data) as source:
 ...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
-...     trip = tuple(
+...     trip = list(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
 ...     )
+
+>>> from operator import itemgetter 
+>>> start = itemgetter(0)
+>>> end = itemgetter(1)
+>>> dist = itemgetter(2)
 
 >>> sm_trip = map(
 ...     lambda x: (start(x), end(x), dist(x) * 6076.12 / 5280),
@@ -282,7 +300,7 @@ REPL_zip_demo = """
 >>> zip(waypoints, waypoints[1:])
 <zip object at ...>
 
->>> list(_)
+>>> list(zip(waypoints, waypoints[1:]))
 [(0, 1), (1, 2), (2, 3)]
 """
 
@@ -355,7 +373,7 @@ REPL_outliers = """
 
 >>> with urllib.request.urlopen(data) as source:
 ...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
-...     trip = tuple(
+...     trip = list(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
 ...     )
@@ -390,7 +408,7 @@ REPL_sorted = """
 
 >>> with urllib.request.urlopen(data) as source:
 ...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
-...     trip = tuple(
+...     trip = list(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
 ...     )
@@ -401,7 +419,8 @@ REPL_sorted = """
 >>> sorted(trip, key=dist)
 [((35.505665, -76.653664), (35.508335, -76.654999), 0.1731), ...
 
->>> dist = lambda leg: leg[2]
+>>> from operator import itemgetter
+>>> dist = itemgetter(2)
 """
 
 REPL_higher_order_map_1 = """
@@ -477,14 +496,15 @@ to_km: Conversion = lambda nm: nm * 1.852
 to_nm: Conversion = lambda nm: nm
 
 from collections.abc import Callable
+from operator import itemgetter
 
 Selector = Callable[[tuple[Any, ...]], Any]
 
-fst: Selector = lambda x: x[0]
+fst: Selector = itemgetter(0)
 
-snd: Selector = lambda x: x[1]
+snd: Selector = itemgetter(1)
 
-sel2: Selector = lambda x: x[2]
+sel2: Selector = itemgetter(2)
 
 from collections.abc import Callable
 
@@ -501,7 +521,7 @@ REPL_test_convert = """
 
 >>> with urllib.request.urlopen(data) as source:
 ...     path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
-...     trip = tuple(
+...     trip = list(
 ...         (start, end, round(haversine(start, end), 4))
 ...         for start, end in legs(path)
 ...     )
@@ -557,8 +577,12 @@ REPL_test_cons_distance = """
 
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(source_url) as source:
-...    path = floats_from_pair(float_lat_lon(row_iter_kml(source)))
-...    trip2 = tuple(cons_distance(haversine, legs(iter(path))))
+...    path = floats_from_pair(
+...        float_lat_lon(row_iter_kml(source))
+...    )
+...    trip2 = tuple(
+...        cons_distance(haversine, legs(iter(path)))
+...    )
 
 >>> trip2[0]
 ((37.54901619777347, -76.33029518659048), (37.840832, -76.273834), 17.7246)
@@ -663,6 +687,22 @@ def test_group_by_iter() -> None:
     assert actual == expected
 
 
+REPL_demo_group_by_iter = """
+>>> from pprint import pprint
+>>> data = list(
+...     filter(lambda x: x % 3 == 0 or x % 5 == 0, range(1, 50))
+... )
+>>> data 
+[3, 5, 6, 9, 10, ..., 48]
+>>> grouped = list(group_by_iter(7, iter(data)))
+>>> pprint(grouped)
+[(3, 5, 6, 9, 10, 12, 15),
+ (18, 20, 21, 24, 25, 27, 30),
+ (33, 35, 36, 39, 40, 42, 45),
+ (48,)]
+"""
+
+
 from collections.abc import Callable, Iterator, Iterable
 from typing import Any
 
@@ -679,18 +719,12 @@ def group_filter_iter(
             except StopIteration:
                 return
 
-    subset = filter(predicate, items)  # Apply the filter
+    subset = filter(predicate, items)
+    # --- Added this to apply the filter
     while row := tuple(group(n, subset)):
+        # --- Changed to use the filter
         yield row
 
-
-# ItemFilterPredicate = Callable[[ItemT], bool]
-# def group_filter_iter(n: int, pred: Callable, items: Iterator) -> Iterator:
-#     subset = filter(pred, items)
-#     row = tuple(next(subset) for i in range(n))
-#     while row:
-#         yield row
-#         row = tuple(next(subset) for i in range(n))
 
 from typing import cast
 

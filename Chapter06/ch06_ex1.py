@@ -44,6 +44,68 @@ def test_facti() -> None:
     assert facti(3) == 6
     assert facti(4) == 24
     assert facti(7) == 5040
+    from math import factorial
+
+    assert facti(1000) == factorial(1000)
+    assert facti(2000) == factorial(2000)
+    assert len(str(facti(2000))) == 5736
+
+
+from collections import deque
+
+
+def fasts(n: int) -> int:
+    # Establish pending work
+    pending: deque[int] = deque()
+    while n != 0:
+        pending.append(n)
+        n = n - 1
+    # Complete the pending work
+    r = 1
+    while pending:
+        r *= pending.pop()
+    return r
+
+
+def test_facts() -> None:
+    assert fasts(0) == 1
+    assert fasts(1) == 1
+    assert fasts(2) == 2
+    assert fasts(3) == 6
+    assert fasts(4) == 24
+    assert fasts(7) == 5040
+    from math import factorial
+
+    assert fasts(1000) == factorial(1000)
+    assert fasts(2000) == factorial(2000)
+    assert len(str(fasts(2000))) == 5736
+
+
+from collections import deque
+from pathlib import Path
+
+
+def all_print(start: Path) -> int:
+    count = 0
+    pending: deque[Path] = deque([start])
+    while pending:
+        dir_path = pending.pop()
+        for path in dir_path.iterdir():
+            if path.is_file():
+                if path.suffix == ".py":
+                    count += path.read_text().count("print")
+            elif path.is_dir():
+                if not path.stem.startswith("."):
+                    pending.append(path)
+            else:  # Ignore other file system objects
+                pass
+    return count
+
+
+def test_all_print() -> None:
+    from pathlib import Path
+
+    assert all_print(Path.cwd()) == 234  # Depends on EXACT code content -- very fiddly
 
 
 def fastexp(a: float, n: int) -> float:
