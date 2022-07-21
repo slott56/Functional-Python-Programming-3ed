@@ -42,29 +42,27 @@ def series(n: int, row_iter: Iterable[Sequence[float]]) -> Iterator[Pair]:
 
 from collections import defaultdict
 from collections.abc import Callable, Iterator, Iterable, Hashable
-from typing import NamedTuple, TypeVar, Any, Protocol, cast, TYPE_CHECKING
+from typing import NamedTuple, TypeVar, Any, Protocol, cast
 
 BaseT = TypeVar("BaseT", int, str, float)
+DataT = TypeVar("DataT")
 
 
 def rank(
-    data: Iterable[tuple[BaseT, ...]],
-    key: Callable[[tuple[BaseT, ...]], BaseT] = lambda obj: obj[0],
-) -> Iterator[tuple[float, tuple[BaseT, ...]]]:
+    data: Iterable[DataT], key: Callable[[DataT], BaseT]
+) -> Iterator[tuple[float, DataT]]:
     def build_duplicates(
-        duplicates: dict[BaseT, list[tuple[BaseT, ...]]],
-        data_iter: Iterator[tuple[BaseT, ...]],
-        key: Callable[[tuple[BaseT, ...]], BaseT],
-    ) -> dict[BaseT, list[tuple[BaseT, ...]]]:
+        duplicates: dict[BaseT, list[DataT]],
+        data_iter: Iterator[DataT],
+        key: Callable[[DataT], BaseT],
+    ) -> dict[BaseT, list[DataT]]:
         for item in data_iter:
             duplicates[key(item)].append(item)
         return duplicates
 
     def rank_output(
-        duplicates: dict[BaseT, list[tuple[BaseT, ...]]],
-        key_iter: Iterator[BaseT],
-        base: int = 0,
-    ) -> Iterator[tuple[float, tuple[BaseT, ...]]]:
+        duplicates: dict[BaseT, list[DataT]], key_iter: Iterator[BaseT], base: int = 0
+    ) -> Iterator[tuple[float, DataT]]:
         for k in key_iter:
             dups = len(duplicates[k])
             for value in duplicates[k]:
@@ -78,7 +76,7 @@ def rank(
 def test_rank() -> None:
     # Samples are 1-tuples
     data_1 = [(0.8,), (1.2,), (1.2,), (2.3,), (18.0,)]
-    ranked_1 = list(rank(data_1))
+    ranked_1 = list(rank(data_1, key=lambda x: x[0]))
     expected_1 = [
         (1.0, (0.8,)),
         (2.5, (1.2,)),
@@ -90,12 +88,7 @@ def test_rank() -> None:
 
     # Samples are two-tuples, we rank by 2nd value.
     data_2 = [(2.0, 0.8), (3.0, 1.2), (5.0, 1.2), (7.0, 2.3), (11.0, 18.0)]
-    ranked_2 = list(
-        rank(
-            data_2,
-            key=lambda x: x[1],
-        )
-    )
+    ranked_2 = list(rank(data_2, key=lambda x: x[1]))
     expected_2 = [
         (1.0, (2.0, 0.8)),
         (2.5, (3.0, 1.2)),
@@ -110,9 +103,15 @@ REPL_test_rank = """
 >>> from pprint import pprint
 
 >>> data_1 = [(0.8,), (1.2,), (1.2,), (2.3,), (18.,)]
->>> ranked_1 = list(rank(data_1))
+>>> ranked_1 = list(rank(data_1, lambda row: row[0]))
 >>> pprint(ranked_1)
 [(1.0, (0.8,)), (2.5, (1.2,)), (2.5, (1.2,)), (4.0, (2.3,)), (5.0, (18.0,))]
+
+>>> from random import shuffle
+>>> shuffle(data_1)
+>>> ranked_1s = list(rank(data_1, lambda row: row[0]))
+>>> ranked_1s == ranked_1
+True
 
 >>> data_2 = [(2., 0.8), (3., 1.2), (5., 1.2), (7., 2.3), (11., 18.)]
 >>> ranked_2 = list(rank(data_2, key=lambda x: x[1],))
@@ -125,7 +124,7 @@ REPL_test_rank = """
 """
 
 # Imperative Solution using a list
-# Comments indiciate how to use a queue instead.
+# Comments indicate how to use a queue instead.
 
 from typing import Sequence
 
@@ -215,154 +214,66 @@ def rank2_rec(
     yield from ranker(data_iter, 0, [head])
 
 
-from typing import NamedTuple
+# Spearman Rank-Order Correlation
+
+from pyrsistent import PRecord, field, PMap, pmap
 
 
-class Ranked_Y(NamedTuple):
-    r_y: float
-    raw: Pair
+class Ranked_XY(PRecord):  # type: ignore [type-arg]
+    rank = field(type=PMap)
+    raw = field(type=Pair)
 
 
-# Force mypy to consider Pair as tuple, which it is.
-Selector = Callable[[tuple[float, ...]], float]
-
-
-def rank_y(pairs: Iterable[Pair]) -> Iterable[Ranked_Y]:
-    return (
-        Ranked_Y(rank, cast(Pair, data))
-        for rank, data in rank(pairs, cast(Selector, lambda pair: pair.y))
-    )
-
-
-def test_rank_y() -> None:
-    data = [
-        Pair(x=10.0, y=8.04),
-        Pair(x=8.0, y=6.95),
-        Pair(x=13.0, y=7.58),
-        Pair(x=9.0, y=8.81),
-        Pair(x=11.0, y=8.33),
-        Pair(x=14.0, y=9.96),
-        Pair(x=6.0, y=7.24),
-        Pair(x=4.0, y=4.26),
-        Pair(x=12.0, y=10.84),
-        Pair(x=7.0, y=4.82),
-        Pair(x=5.0, y=5.68),
-    ]
-
-    ranked = list(rank_y(data))
-    expected = [
-        Ranked_Y(r_y=1.0, raw=Pair(x=4.0, y=4.26)),
-        Ranked_Y(r_y=2.0, raw=Pair(x=7.0, y=4.82)),
-        Ranked_Y(r_y=3.0, raw=Pair(x=5.0, y=5.68)),
-        Ranked_Y(r_y=4.0, raw=Pair(x=8.0, y=6.95)),
-        Ranked_Y(r_y=5.0, raw=Pair(x=6.0, y=7.24)),
-        Ranked_Y(r_y=6.0, raw=Pair(x=13.0, y=7.58)),
-        Ranked_Y(r_y=7.0, raw=Pair(x=10.0, y=8.04)),
-        Ranked_Y(r_y=8.0, raw=Pair(x=11.0, y=8.33)),
-        Ranked_Y(r_y=9.0, raw=Pair(x=9.0, y=8.81)),
-        Ranked_Y(r_y=10.0, raw=Pair(x=14.0, y=9.96)),
-        Ranked_Y(r_y=11.0, raw=Pair(x=12.0, y=10.84)),
-    ]
-    assert ranked == expected
-
-
-REPL_test_rank_y = """
->>> data = [
-...     Pair(x=10.0, y=8.04), Pair(x=8.0, y=6.95),
-...     Pair(x=13.0, y=7.58), Pair(x=9.0, y=8.81),
-...     Pair(x=7.0, y=4.82), Pair(x=5.0, y=5.68)
-... ]
-
->>> from pprint import pprint
-
->>> ranked = list(rank_y(data))
->>> pprint(ranked)
-[Ranked_Y(r_y=1.0, raw=Pair(x=7.0, y=4.82)),
- Ranked_Y(r_y=2.0, raw=Pair(x=5.0, y=5.68)),
- Ranked_Y(r_y=3.0, raw=Pair(x=8.0, y=6.95)),
- Ranked_Y(r_y=4.0, raw=Pair(x=13.0, y=7.58)),
- Ranked_Y(r_y=5.0, raw=Pair(x=10.0, y=8.04)),
- Ranked_Y(r_y=6.0, raw=Pair(x=9.0, y=8.81))]
-
-"""
-
-
-class Ranked_XY(NamedTuple):
-    r_x: float
-    r_y: float
-    raw: Pair
-
-
-from collections.abc import Sequence, Iterator
+# from pyrsistent import PRecord, field, PMap, pmap
+#
+# class Ranked_XY(PRecord):  # type: ignore [type-arg]
+#     rank = field(type=PMap)
+#     raw = field(type=Pair)
 
 
 def rank_xy(pairs: Sequence[Pair]) -> Iterator[Ranked_XY]:
-    return (
-        Ranked_XY(r_x=r_x, r_y=rank_y_raw.r_y, raw=rank_y_raw.raw)
-        for r_x, rank_y_raw in cast(
-            Iterator[tuple[float, Ranked_Y]],
-            rank(rank_y(pairs), cast(Selector, lambda r: r.raw.x)),
+    data = list(Ranked_XY(rank=pmap(), raw=p) for p in pairs)
+
+    for attribute_name in ("x", "y"):
+        ranked = rank(data, lambda rxy: cast(float, getattr(rxy.raw, attribute_name)))
+        data = list(
+            original.set(
+                rank=original.rank.set(attribute_name, r)  # type: ignore [arg-type]
+            )
+            for r, original in ranked
         )
-    )
+
+    yield from iter(data)
 
 
-def test_rank_xy() -> None:
-    data = (
-        Pair(x=10.0, y=8.04),
-        Pair(x=8.0, y=6.95),
-        Pair(x=13.0, y=7.58),
-        Pair(x=9.0, y=8.81),
-        Pair(x=11.0, y=8.33),
-        Pair(x=14.0, y=9.96),
-        Pair(x=6.0, y=7.24),
-        Pair(x=4.0, y=4.26),
-        Pair(x=12.0, y=10.84),
-        Pair(x=7.0, y=4.82),
-        Pair(x=5.0, y=5.68),
-    )
-    ranked = list(rank_xy(data))
-    expected = [
-        Ranked_XY(r_x=1.0, r_y=1.0, raw=Pair(x=4.0, y=4.26)),
-        Ranked_XY(r_x=2.0, r_y=3.0, raw=Pair(x=5.0, y=5.68)),
-        Ranked_XY(r_x=3.0, r_y=5.0, raw=Pair(x=6.0, y=7.24)),
-        Ranked_XY(r_x=4.0, r_y=2.0, raw=Pair(x=7.0, y=4.82)),
-        Ranked_XY(r_x=5.0, r_y=4.0, raw=Pair(x=8.0, y=6.95)),
-        Ranked_XY(r_x=6.0, r_y=9.0, raw=Pair(x=9.0, y=8.81)),
-        Ranked_XY(r_x=7.0, r_y=7.0, raw=Pair(x=10.0, y=8.04)),
-        Ranked_XY(r_x=8.0, r_y=8.0, raw=Pair(x=11.0, y=8.33)),
-        Ranked_XY(r_x=9.0, r_y=11.0, raw=Pair(x=12.0, y=10.84)),
-        Ranked_XY(r_x=10.0, r_y=6.0, raw=Pair(x=13.0, y=7.58)),
-        Ranked_XY(r_x=11.0, r_y=10.0, raw=Pair(x=14.0, y=9.96)),
-    ]
-    assert ranked == expected
+#
+# def rank_xy(pairs: Sequence[Pair]) -> Iterator[Ranked_XY]:
+#     data = list(Ranked_XY(rank=pmap(), raw=p) for p in pairs)
+#
+#     for attribute_name in ('x', 'y'):
+#         ranked = rank(
+#             data,
+#             lambda rxy: cast(float, getattr(rxy.raw, attribute_name))
+#         )
+#         data = list(
+#             r[1].set(
+#                 rank=r[1].rank.set(attribute_name, r[0])  # type: ignore [arg-type]
+#             )
+#             for r in ranked
+#         )
+#
+#     yield from iter(data)
 
-
-REPL_test_rank_xy = """
->>> data = [
-...     Pair(x=10.0, y=8.04), Pair(x=8.0, y=6.95),
-...     Pair(x=13.0, y=7.58), Pair(x=9.0, y=8.81),
-...     Pair(x=7.0, y=4.82), Pair(x=5.0, y=5.68)
-... ]
-
->>> from pprint import pprint
-
->>> ranked = list(rank_xy(data))
->>> pprint(ranked)
-[Ranked_XY(r_x=1.0, r_y=2.0, raw=Pair(x=5.0, y=5.68)),
- Ranked_XY(r_x=2.0, r_y=1.0, raw=Pair(x=7.0, y=4.82)),
- Ranked_XY(r_x=3.0, r_y=3.0, raw=Pair(x=8.0, y=6.95)),
- Ranked_XY(r_x=4.0, r_y=6.0, raw=Pair(x=9.0, y=8.81)),
- Ranked_XY(r_x=5.0, r_y=5.0, raw=Pair(x=10.0, y=8.04)),
- Ranked_XY(r_x=6.0, r_y=4.0, raw=Pair(x=13.0, y=7.58))]
-
-"""
 
 from collections.abc import Sequence
 
 
 def rank_corr(pairs: Sequence[Pair]) -> float:
     ranked = rank_xy(pairs)
-    sum_d_2 = sum((r.r_x - r.r_y) ** 2 for r in ranked)
+    sum_d_2 = sum(
+        (r.rank["x"] - r.rank["y"]) ** 2  # type: ignore[operator, index]
+        for r in ranked
+    )
     n = len(pairs)
     return 1 - 6 * sum_d_2 / (n * (n ** 2 - 1))
 

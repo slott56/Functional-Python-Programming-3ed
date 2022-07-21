@@ -7,7 +7,7 @@ from typing import NamedTuple, Any
 
 
 class RankData(NamedTuple):
-    rank_seq: tuple[float]
+    rank_seq: tuple[float, ...]
     raw: Any
 
 
@@ -57,7 +57,7 @@ def legs(lat_lon_iter: Iterator[LL_Type]) -> Iterator[tuple[LL_Type, LL_Type]]:
 from collections.abc import Iterator, Iterable, Sequence
 from typing import Any, TypeVar
 
-# Defined Earlier.
+# Defined earlier
 # LL_Type = TypeVar('LL_Type')
 
 
@@ -78,14 +78,13 @@ def legs_g(
 from collections.abc import Sequence, Iterator, Iterable
 from typing import Any, TypeVar
 
-# Defined Earlier
+# Defined earlier
 # LL_Type = TypeVar('LL_Type')
 
 
 def legs_m(
     lat_lon_src: Iterator[LL_Type] | Sequence[LL_Type],
 ) -> Iterator[tuple[LL_Type, LL_Type]]:
-    # lat_lon_iter: Iterator[LL_Type]  # Needed? Or cast(Iterator[LL_Type], lat_lon_src)?
 
     match lat_lon_src:
         case Sequence():

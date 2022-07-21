@@ -88,6 +88,7 @@ from typing import Iterable, Iterator
 
 
 def float_lat_lon(row_iter: Iterable[list[str]]) -> Iterator[PointNT]:
+    # ------
     lat_lon_iter = (pick_lat_lon(*row) for row in row_iter)
     return (
         PointNT(float(lat), float(lon))
@@ -167,6 +168,8 @@ class PointE(NamedTuple):
 REPL_test_pointe = """
 >>> start = PointE(latitude=38.330166, longitude=-76.458504)
 >>> end = PointE(latitude=38.976334, longitude=-76.473503)
+
+# Apply the distance() method of the start object...
 >>> leg = LegNT(start, end, round(start.distance(end), 4))
 >>> leg.start == start
 True

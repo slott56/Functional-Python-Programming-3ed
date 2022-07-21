@@ -75,8 +75,8 @@ REPL_long_short_2 = """
 >>> longest
 ((27.154167, -80.195663), (29.195168, -81.002998), 129.7748)
 
->>> shortest = unwrap(min(wrap(trip)))
->>> shortest
+>>> short = unwrap(min(wrap(trip)))
+>>> short
 ((35.505665, -76.653664), (35.508335, -76.654999), 0.1731)
 """
 
@@ -104,31 +104,10 @@ REPL_long_short_3 = """
 >>> longest
 ((27.154167, -80.195663), (29.195168, -81.002998), 129.7748)
 
->>> shortest = min(trip, key=by_dist)
->>> shortest
+>>> short = min(trip, key=by_dist)
+>>> short
 ((35.505665, -76.653664), (35.508335, -76.654999), 0.1731)
 """
-
-from collections.abc import Iterable, Callable
-from typing import Any
-
-Key_Func = Callable[[Any], Any]
-
-
-def max_like(trip: Iterable[Any], key: Key_Func) -> Any:
-    wrapped = ((key(leg), leg) for leg in trip)
-    last = sorted(wrapped)[-1]
-    return last[1]
-
-
-def test_max_like() -> None:
-    trip = [
-        ((0, 0), (1, 1), 1.4),
-        ((1, 1), (3, 3), 2.8),
-        ((3, 3), (3, 0), 3),
-    ]
-    assert max_like(trip, lambda x: x[2]) == ((3, 3), (3, 0), 3)
-
 
 REPL_test_long_short_4 = """
 >>> from Chapter04.ch04_ex1 import (
@@ -168,6 +147,7 @@ REPL_test_long_short_5 = """
 >>> start = itemgetter(0)
 >>> start(longest)
 (27.154167, -80.195663)
+
 >>> lat = itemgetter(0)
 >>> lon = itemgetter(1)
 >>> lat(start(longest))
@@ -212,15 +192,22 @@ REPL_sm_trip = """
 ...         for start, end in legs(path)
 ...     )
 
+>>> len(trip)
+73
+>>> trip[0]
+((37.54901619777347, -76.33029518659048), (37.840832, -76.273834), 17.7246)
+
 >>> from operator import itemgetter 
 >>> start = itemgetter(0)
 >>> end = itemgetter(1)
 >>> dist = itemgetter(2)
-
 >>> sm_trip = map(
 ...     lambda x: (start(x), end(x), dist(x) * 6076.12 / 5280),
 ...     trip
 ... )
+
+>>> sm_trip
+<map object at ...>
 
 >>> list(sm_trip)
 [((37.54901619777347, -76.33029518659048), (37.840832, -76.273834), 20.397120559090908)...
@@ -229,12 +216,6 @@ REPL_sm_trip = """
 ...     (start(x), end(x), dist(x) * 6076.12 / 5280)
 ...     for x in trip
 ... )
-
->>> list(sm_trip)
-[((37.54901619777347, -76.33029518659048), (37.840832, -76.273834), 20.397120559090908)...
-
->>> to_miles = lambda x: (start(x), end(x), dist(x) * 6076.12 / 5280)
->>> sm_trip = map(to_miles, trip)
 
 >>> list(sm_trip)
 [((37.54901619777347, -76.33029518659048), (37.840832, -76.273834), 20.397120559090908)...
@@ -286,13 +267,6 @@ def test_example_map_2() -> None:
     another_iterable = [4, 5, 6]
     r = example_map_syntax_2(function, one_iterable, another_iterable)
     assert list(r) == [12, 21, 30]
-
-
-from collections.abc import Callable, Iterable
-
-
-def star_map(function: Callable[..., Any], *iterables: Iterable[Any]) -> Iterator[Any]:
-    return (function(*args) for args in zip(*iterables))
 
 
 REPL_zip_demo = """
@@ -720,9 +694,9 @@ def group_filter_iter(
                 return
 
     subset = filter(predicate, items)
-    # --- Added this to apply the filter
+    # ^-- Added this to apply the filter
     while row := tuple(group(n, subset)):
-        # --- Changed to use the filter
+        # ^-- Changed to use the filter
         yield row
 
 
@@ -749,83 +723,7 @@ REPL_compare_group = """
 >>> groups = list(
 ...     group_filter_iter(7, rule, iter(range(1, 50)))
 ... )
-
 >>> assert groups == groups_explicit
-"""
-
-
-from collections.abc import Callable, Iterable
-from typing import TypeVar
-
-CollT = TypeVar("CollT")
-
-
-def first(
-    predicate: Callable[[CollT], bool], collection: Iterable[CollT]
-) -> CollT | None:
-    for x in collection:
-        if predicate(x):
-            return x
-    return None
-
-
-def test_first() -> None:
-    x = first(lambda a: a % 2 == 0, [1, 3, 5, 7, 8, 9, 10])
-    assert x == 8
-
-
-import math
-
-
-def isprimeh(x: int) -> bool:
-    if x == 2:
-        return True
-    if x % 2 == 0:
-        return False
-    factor = first(lambda n: x % n == 0, range(3, int(math.sqrt(x) + 0.5) + 1, 2))
-    return factor is None
-
-
-def test_isprimeh() -> None:
-    actual = tuple(isprimeh(x) for x in range(3, 11))
-    expected = (True, False, True, False, True, False, False, False)
-    assert actual == expected
-
-
-from collections.abc import Callable, Iterable
-from typing import TypeVar
-
-D_T = TypeVar("D_T")
-R_T = TypeVar("R_T")
-
-
-def map_exclude(func: Callable[[D_T], R_T], source: Iterable[D_T]) -> Iterator[R_T]:
-    for x in source:
-        try:
-            yield func(x)
-        except Exception as e:
-            pass  # For help debugging, log x and e
-
-
-from collections.abc import Callable
-
-
-def test_map_exclude() -> None:
-    squared: Callable[[int], float] = lambda x: x ** 2
-    actual = list(map_exclude(squared, [1, 2, 3.14, None, "42"]))  # type: ignore[arg-type]
-    assert actual == [1, 4, 9.8596]
-
-    # Typical situation of applying a conversion to trash data.
-    source: list[str | None] = cast(list[str | None], [1, 2, 3.14, None, "42"])
-    ex2 = list(map_exclude(int, source))  # type: ignore[arg-type]
-    assert ex2 == [1, 2, 3, 42]
-
-
-REPL_test_map_not_none = """
->>> source = [1, 2, 3.14, None, "42"]
->>> values = list(map_exclude(int, source))
->>> values
-[1, 2, 3, 42]
 """
 
 

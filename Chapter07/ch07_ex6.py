@@ -117,6 +117,7 @@ from typing import Iterable, Iterator
 
 
 def float_lat_lon(row_iter: Iterable[list[str]]) -> Iterator[PointNT]:
+    # ------
     lat_lon_iter = (pick_lat_lon(*row) for row in row_iter)
     return (
         PointNT(float(lat), float(lon))
