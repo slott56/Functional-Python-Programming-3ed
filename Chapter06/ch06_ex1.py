@@ -105,7 +105,7 @@ def all_print(start: Path) -> int:
 def test_all_print() -> None:
     from pathlib import Path
 
-    assert all_print(Path.cwd()) == 234  # Depends on EXACT code content -- very fiddly
+    assert all_print(Path.cwd()) == 228  # Depends on EXACT code content -- very fiddly
 
 
 def fastexp(a: float, n: int) -> float:

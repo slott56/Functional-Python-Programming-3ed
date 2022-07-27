@@ -1,10 +1,10 @@
 Starting server 'Chapter15/ch15_ex3.py'...
 Startup Failure? server.poll()=None
-127.0.0.1 - - [04/Jul/2022 09:03:13] "GET /demo/some/path/to/data HTTP/1.1" 200 1927
+127.0.0.1 - - [27/Jul/2022 14:29:05] "GET /demo/some/path/to/data HTTP/1.1" 200 1904
 static_path=PosixPath('/Users/slott/Documents/Writing/Python/Functional Python 3e/Functional_Python_Programming_3e/Chapter15/demo.file')
-127.0.0.1 - - [04/Jul/2022 09:03:13] "GET /static/Chapter15/demo.file HTTP/1.1" 200 41
+127.0.0.1 - - [27/Jul/2022 14:29:05] "GET /static/Chapter15/demo.file HTTP/1.1" 200 41
 PATH_INFO '/'
-127.0.0.1 - - [04/Jul/2022 09:03:13] "GET /static/ HTTP/1.1" 200 2212
-127.0.0.1 - - [04/Jul/2022 09:03:13] "GET /welcome/ HTTP/1.1" 200 1063
-Killing server.pid=20235
+127.0.0.1 - - [27/Jul/2022 14:29:05] "GET /static/ HTTP/1.1" 200 2326
+127.0.0.1 - - [27/Jul/2022 14:29:05] "GET /welcome/ HTTP/1.1" 200 1063
+Killing server.pid=53561
 Final server.poll()=-9

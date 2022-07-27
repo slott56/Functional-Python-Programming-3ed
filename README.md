@@ -27,47 +27,76 @@ We’ll presume some familiarity with functional programming. Since Python is no
 
 Some of the examples use exploratory data analysis (EDA) as a problem domain to show the value of functional programming. Some familiarity with basic probability and statistics will help with this. There are only a few examples that move into more serious data science.
 
-You’ll need to have Python 3.6 installed and running. For more information on Python, visit http://www.python.org/. The examples all make extensive use of type hints, which means that the latest version of mypy must be installed as well.
+You’ll need to have Python 3.10 installed and running. 
+For more information on Python, visit http://www.python.org/. 
 
-Check out https://pypi.python.org/pypi/mypy for the latest version of mypy.
+There are two paths to installing the required packages:
 
-Examples in Chapter 9, More Itertools Techniques, use PIL and Beautiful Soup 4. The Pillow fork of the original PIL library works nicely; refer to https://pypi.python.org/pypi/Pillow/2.7.0 and https://pypi.python.org/pypi/beautifulsoup4/4.6.0.
+- Conda. This requires an additional install of mini Conda. Visit https://docs.conda.io/en/latest/miniconda.html to download and install Conda and use it to build a virtual environment.
 
-Examples in Chapter 14, The PyMonad Library, use PyMonad; check out https://pypi.python.org/pypi/PyMonad/1.3.
+- PIP and venv. These are built-in.
 
-All of these packages should be installed using the following:
+### Conda Installation
 
-```bash
-$ pip install pillow beautifulsoup4 PyMonad
-```
+When using the **conda** tool, start with an installation of Miniconda.
+See https://docs.conda.io/en/latest/miniconda.html
 
-To confirm that all the doctests pass run the following:
-
-```bash
-$ python3 test_all.py
-```
-
-To run the tests chapter wise use the following:
+After the **conda** tool is installed,
+the required packages can be installed using the following:
 
 ```bash
-$ python3 -m doctest (folder name)/*.py
+conda create -n functional3 --channel=conda-forge  python=3.10 --file requirements-conda.txt
+conda activate functional3
+python -m pip install pymonad==2.4.0
 ```
 
-Example:
+This will create and activate a virtual environment for the examples in the book.
+
+Skip over the PIP installation section.
+
+### PIP Installation
+
+When using the **PIP**  and **venv** tools, the required packages can be installed using the following:
 
 ```bash
-$ python3 -m doctest Chapter03/*.py
+python3 -m venv functional3
 ```
 
-There is no response when the tests pass.
+This must be activated. The command varies between OS's.
 
-If you want details, you can run the following:
+For Windows, use this command:
 
 ```bash
-$ python3 -m doctest -v Chapter04/*.py
+functional3\Scripts\activate.bat
 ```
 
-This will produce a lot of detail, but at the end is a count of tests passed.
+For Linux and macOS, use this command:
+
+```bash
+source functional3/bin/activate
+```
+
+Then, use the following to install all the packages.
+
+```bash
+python -m pip install -rrequirements.txt
+```
+
+### Test Suite
+
+There's a comprehensive test suite for the code that's run using the **tox** tool.
+To confirm that all the tests pass run the following:
+
+```bash
+$ tox
+```
+
+To run the tests for a particular chapter you can use a command like the following:
+
+```bash
+$ tox -e ch01
+```
+
 
 ## Related Products
 * [Functional Python Programming](https://www.packtpub.com/application-development/functional-python-programming?utm_source=github&utm_medium=repository&utm_campaign=9781784396992)
