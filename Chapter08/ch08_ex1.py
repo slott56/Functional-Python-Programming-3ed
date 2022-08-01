@@ -12,6 +12,9 @@ REPL_trip = """
 >>> from textwrap import wrap
 >>> from pprint import pprint
 
+>>> trip[0]
+LegNT(start=PointNT(latitude=37.54901619777347, longitude=-76.33029518659048), ...
+
 >>> pprint(wrap(str(trip[0])))
 ['LegNT(start=PointNT(latitude=37.54901619777347,',
  'longitude=-76.33029518659048), end=PointNT(latitude=37.840832,',
@@ -21,8 +24,6 @@ REPL_trip = """
  'end=PointNT(latitude=38.976334, longitude=-76.473503),',
  'distance=38.8019)']
 """
-
-from Chapter04.ch04_ex1 import haversine
 
 from typing import NamedTuple
 
@@ -51,15 +52,16 @@ def float_lat_lon(row_iter: Iterator[List[str]]) -> Iterator[Point]:
 
 
 from typing import Iterator
+from Chapter04.ch04_ex1 import haversine
 
 
-def ordered_leg_iter(pair_iter: Iterator[tuple[Point, Point]]) -> Iterator[Leg]:
+def numbered_leg_iter(pair_iter: Iterator[tuple[Point, Point]]) -> Iterator[Leg]:
     for order, pair in enumerate(pair_iter):
         start, end = pair
         yield Leg(order, start, end, round(haversine(start, end), 4))
 
 
-def test_ordered_leg_iter() -> None:
+def test_numbered_leg_iter() -> None:
     from Chapter06.ch06_ex3 import row_iter_kml
     from Chapter04.ch04_ex1 import legs, haversine
     import urllib.request
@@ -68,7 +70,7 @@ def test_ordered_leg_iter() -> None:
     with urllib.request.urlopen(source_url) as source:
         path_iter = float_lat_lon(row_iter_kml(source))
         pair_iter = legs(path_iter)
-        trip_iter = ordered_leg_iter(pair_iter)
+        trip_iter = numbered_leg_iter(pair_iter)
         trip = list(trip_iter)
     assert trip[0] == Leg(
         order=0,
@@ -99,7 +101,7 @@ REPL_test_parser = """
 >>> with urllib.request.urlopen(source_url) as source:
 ...     path_iter = float_lat_lon(row_iter_kml(source))
 ...     pair_iter = legs(path_iter)
-...     trip_iter = ordered_leg_iter(pair_iter)
+...     trip_iter = numbered_leg_iter(pair_iter)
 ...     trip = list(trip_iter)
 
 >>> len(trip)
@@ -120,16 +122,17 @@ REPL_accumulate = """
 >>> with urllib.request.urlopen(source_url) as source:
 ...     path_iter = float_lat_lon(row_iter_kml(source))
 ...     pair_iter = legs(path_iter)
-...     trip_iter = ordered_leg_iter(pair_iter)
+...     trip_iter = numbered_leg_iter(pair_iter)
 ...     trip = list(trip_iter)
 
 >>> from itertools import accumulate
+>>> import math
 
 >>> distances = (leg.distance for leg in trip)
 >>> distance_accum = list(accumulate(distances))
->>> total = distance_accum[-1] + 1.0
+>>> scale = math.ceil(distance_accum[-1] / 4)
 
->>> quartiles = list(int(4 * d / total) for d in distance_accum)
+>>> quartiles = list(int(scale*d) for d in distance_accum)
 """
 
 __test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}

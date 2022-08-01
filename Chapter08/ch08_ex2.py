@@ -19,34 +19,37 @@ from typing import TypeVar
 T = TypeVar("T")
 
 
-def until(terminate: Callable[[T], bool], iterator: Iterator[T]) -> T:
+def find_first(terminate: Callable[[T], bool], iterator: Iterator[T]) -> T:
     i = next(iterator)
     if terminate(i):
         return i
-    return until(terminate, iterator)
+    return find_first(terminate, iterator)
 
 
 from itertools import count
-from collections.abc import Iterator, Callable
+from collections.abc import Iterator
+from typing import NamedTuple
 
-Pair_Gen = Iterator[tuple[float, float]]
-source: Pair_Gen = zip(count(0, 0.1), (0.1 * c for c in count()))
+Pair = NamedTuple("Pair", [("flt_count", float), ("int_count", float)])
+Pair_Gen = Iterator[Pair]
 
-Extractor = Callable[[tuple[float, float]], float]
-x: Extractor = lambda x_y: x_y[0]
-y: Extractor = lambda x_y: x_y[1]
+source: Pair_Gen = (
+    Pair(fc, ic) for fc, ic in zip(count(0, 0.1), (0.1 * c for c in count()))
+)
 
-Comparator = Callable[[tuple[float, float]], bool]
-neq: Comparator = lambda xy: abs(x(xy) - y(xy)) > 1.0e-12
+
+def not_equal(pair: Pair) -> bool:
+    return abs(pair.flt_count - pair.int_count) > 1.0e-12
+
 
 REPL_accumulated_error_1 = """
->>> until(neq, source)
-(92.799999999999, 92.80000000000001)
+>>> find_first(not_equal, source)
+Pair(flt_count=92.799999999999, int_count=92.80000000000001)
 
->>> source: Pair_Gen = zip(count(0, 0.1), (.1*c for c in count()))
+>>> source: Pair_Gen = map(Pair, count(0, 0.1), (.1*c for c in count()))
 
->>> until(lambda xy: x(xy) != y(xy), source)
-(0.6, 0.6000000000000001)
+>>> find_first(lambda pair: pair.flt_count != pair.int_count, source)
+Pair(flt_count=0.6, int_count=0.6000000000000001)
 """
 
 from collections.abc import Callable, Iterator
@@ -55,7 +58,7 @@ from typing import TypeVar
 UT = TypeVar("UT")
 
 
-def until_i(terminate: Callable[[UT], bool], iterator: Iterator[UT]) -> UT:
+def find_first_i(terminate: Callable[[UT], bool], iterator: Iterator[UT]) -> UT:
     for i in iterator:
         if terminate(i):
             return i
@@ -64,18 +67,22 @@ def until_i(terminate: Callable[[UT], bool], iterator: Iterator[UT]) -> UT:
 
 REPL_accumulated_error_2 = """
 >>> from itertools import count
->>> source_2 = zip(count(0, .1), (.1*c for c in count()))
->>> x = lambda x_y: x_y[0]
->>> y = lambda x_y: x_y[1]
->>> neq6: Callable[[tuple[float, float]], bool] = lambda xy: abs(x(xy)-y(xy)) > 1.0E-6
->>> until_i(neq6, source_2)
-(94281.30000100001, 94281.3)
->>> source_3 = zip( count(0, 1/35), (c/35 for c in count()) )
->>> until_i(neq6, source_3)
-(73143.51428471429, 73143.5142857143)
->>> source_4 = zip( count(0, 1/35), (c/35 for c in count()) )
->>> until_i(lambda xy: x(xy) != y(xy), source_4)
-(0.2285714285714286, 0.22857142857142856)
+
+>>> source_2: Pair_Gen = (
+...   Pair(fc, ic) for fc, ic in 
+...   zip(count(0, 0.1), (.1*c for c in count()))
+... )
+>>> neq6: Callable[[tuple[float, float]], bool] = lambda pair: abs(pair.flt_count - pair.int_count) > 1.0E-6
+>>> find_first_i(neq6, source_2)
+Pair(flt_count=94281.30000100001, int_count=94281.3)
+
+>>> source_3 = map(Pair, count(0, 1/35), (c/35 for c in count()))
+>>> find_first_i(neq6, source_3)
+Pair(flt_count=73143.51428471429, int_count=73143.5142857143)
+
+>>> source_4 = map(Pair, count(0, 1/35), (c/35 for c in count()))
+>>> find_first_i(lambda pair: pair.flt_count != pair.int_count, source_4)
+Pair(flt_count=0.2285714285714286, int_count=0.22857142857142856)
 """
 
 REPL_fizz_buzz = """
@@ -119,8 +126,8 @@ from typing import TypeVar
 DT = TypeVar("DT")
 
 
-def subset_iter(source: Iterable[DT], n: int) -> Iterator[DT]:
-    chooser = (x == 0 for x in cycle(range(n)))
+def subset_iter(source: Iterable[DT], cycle_size: int) -> Iterator[DT]:
+    chooser = (x == 0 for x in cycle(range(cycle_size)))
     yield from (row for keep, row in zip(chooser, source) if keep)
 
 
@@ -128,11 +135,11 @@ import csv
 from pathlib import Path
 
 
-def csv_subset(source: Path, target: Path, ratio: int = 3) -> None:
+def csv_subset(source: Path, target: Path, cycle_size: int = 3) -> None:
     with (source.open() as source_file, target.open("w", newline="") as target_file):
         rdr = csv.reader(source_file, delimiter="\t")
         wtr = csv.writer(target_file)
-        wtr.writerows(subset_iter(rdr, ratio))
+        wtr.writerows(subset_iter(rdr, cycle_size))
 
 
 def test_csv_subset(tmp_path: Path) -> None:

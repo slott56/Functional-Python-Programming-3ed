@@ -210,10 +210,11 @@ def test_row_iter_csv_tab() -> None:
 
 
 REPL_groupby = """
+>>> from itertools import groupby
 >>> from Chapter07.ch07_ex1 import get_trip
 
 >>> source_url = "file:./Winter%202012-2013.kml"
->>> trip = get_trip()
+>>> trip = get_trip(source_url)
 >>> quartile = quartiles(trip)
 >>> group_iter = groupby(zip(quartile, trip), key=lambda q_raw: q_raw[0])
 >>> for group_key, group_iter in group_iter:
@@ -288,6 +289,14 @@ def randomized(limit: int) -> Iterator[bool]:
         yield random.randrange(limit) == 0
 
 
+REPL_pairwise = """
+>>> from itertools import pairwise
+
+>>> text = "hello world"
+>>> list(pairwise(text))
+[('h', 'e'), ('e', 'l'), ('l', 'l'), ...]
+"""
+
 from itertools import compress
 from collections.abc import Iterable, Iterator, Callable
 from typing import TypeVar
@@ -315,6 +324,8 @@ REPL_compress = """
 >>> import random
 >>> random.seed(1)
 >>> data = [random.randint(1, 12) for _ in range(12)]
+
+>>> from itertools import compress
 
 >>> copy = compress(data, all_rows())
 >>> list(copy)
@@ -458,12 +469,9 @@ map_concept = lambda function, arg_iter: (function(a) for a in arg_iter)
 
 starmap_concept = (
     lambda function, arg_iter: (function(*a) for a in arg_iter)
-    # ^-- Adds this
+    # ^-- Adds this * to decompose tuples
 )
 
-map_1 = lambda function, *iters: (function(*args) for args in zip(*iters))
-
-map_2 = lambda function, *iters: (starmap(function, zip(*iters)))
 
 from Chapter04.ch04_ex1 import legs, haversine
 from Chapter06.ch06_ex3 import row_iter_kml
