@@ -30,10 +30,10 @@ def stdev(data: Sequence[float]) -> float:
 
     s0 = len(data)  # sum(1 for x in data)
     s1 = sum(data)  # sum(x for x in data)
-    s2 = sum(x ** 2 for x in data)
+    s2 = sum(x**2 for x in data)
 
     mean = s1 / s0
-    stdev = math.sqrt(s2 / s0 - mean ** 2)
+    stdev = math.sqrt(s2 / s0 - mean**2)
     return stdev
 
 

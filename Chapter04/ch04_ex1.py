@@ -78,7 +78,7 @@ REPL_raw_data = """
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(source_url) as source:
 ...     v1 = list(row_iter_kml(source))
->>> pprint(v1)  # doctest: +ELLIPSIS
+>>> pprint(v1)
 [['-76.33029518659048', '37.54901619777347', '0'],
  ['-76.27383399999999', '37.840832', '0'],
  ['-76.459503', '38.331501', '0'],
