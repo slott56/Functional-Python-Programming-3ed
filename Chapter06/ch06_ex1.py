@@ -196,7 +196,7 @@ from typing import cast
 
 
 def test_mapr() -> None:
-    assert mapr(lambda x: cast(int, 2 ** x), [0, 1, 2, 3, 4]) == [1, 2, 4, 8, 16]
+    assert mapr(lambda x: cast(int, 2**x), [0, 1, 2, 3, 4]) == [1, 2, 4, 8, 16]
 
 
 from collections.abc import Callable, Iterable, Iterator
@@ -211,7 +211,7 @@ def mapf(f: Callable[[DomT], RngT], C: Iterable[DomT]) -> Iterator[RngT]:
 
 
 def test_mapf() -> None:
-    assert list(mapf(lambda x: cast(int, 2 ** x), [0, 1, 2, 3, 4])) == [1, 2, 4, 8, 16]
+    assert list(mapf(lambda x: cast(int, 2**x), [0, 1, 2, 3, 4])) == [1, 2, 4, 8, 16]
 
 
 def mapg(f: Callable[[DomT], RngT], C: Iterable[DomT]) -> Iterator[RngT]:
@@ -220,7 +220,7 @@ def mapg(f: Callable[[DomT], RngT], C: Iterable[DomT]) -> Iterator[RngT]:
 
 
 def test_mapg() -> None:
-    assert list(mapg(lambda x: cast(int, 2 ** x), [0, 1, 2, 3, 4])) == [1, 2, 4, 8, 16]
+    assert list(mapg(lambda x: cast(int, 2**x), [0, 1, 2, 3, 4])) == [1, 2, 4, 8, 16]
 
 
 REPL_test_mapg = """

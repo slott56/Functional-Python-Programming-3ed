@@ -3,11 +3,31 @@
 Chapter 6, Example Set 2
 """
 
+from typing import Iterator
 
-def syntax_check_1() -> None:
-    Point = tuple[float, float]
-    trip: list[tuple[Point, Point, float]]
+Point = tuple[float, float]
+
+
+def syntax_check_1(trip: list[tuple[Point, Point, float]]) -> Iterator[float]:
     quantized = (5 * (dist // 5) for start, stop, dist in trip)
+    return quantized
+
+
+def syntax_check_2(trip: list[tuple[Point, Point, float]]) -> Iterator[float]:
+    quantized = (5 * (dist // 5) for _, _, dist in trip)
+    return quantized
+
+
+def test_syntax_check_1() -> None:
+    data = [((d, d), (d, d), d) for d in map(float, range(10))]
+    q = list(syntax_check_1(data))
+    assert q == [0, 0, 0, 0, 0, 5, 5, 5, 5, 5]
+
+
+def test_syntax_check_2() -> None:
+    data = [((d, d), (d, d), d) for d in map(float, range(10))]
+    q = list(syntax_check_2(data))
+    assert q == [0, 0, 0, 0, 0, 5, 5, 5, 5, 5]
 
 
 REPL_quantized = """
@@ -194,7 +214,8 @@ REPL_group_by = """
 """
 
 
-from collections.abc import Callable, Hashable
+from collections import defaultdict
+from collections.abc import Callable, Hashable, Iterable
 from typing import TypeVar
 
 SeqT = TypeVar("SeqT")
@@ -204,7 +225,7 @@ KeyT = TypeVar("KeyT", bound=Hashable)
 def partition(
     key: Callable[[SeqT], KeyT], data: Iterable[SeqT]
 ) -> dict[KeyT, list[SeqT]]:
-    group_dict: dict[KeyT, list[SeqT]] = defaultdict(list)
+    group_dict = defaultdict(list)
     for head in data:
         group_dict[key(head)].append(head)
         # ---------------------------------
