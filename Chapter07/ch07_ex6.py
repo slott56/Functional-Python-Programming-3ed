@@ -12,15 +12,9 @@ pmap({'hello': 42, 'world': 3.14159})
 42
 >>> v['world']
 3.14159
-
-Evolve to a new object
-
 >>> v2 = v.set("another", 2.71828)
 >>> v2    # doctest: +SKIP
 pmap({'hello': 42, 'world': 3.14159, 'another': 2.71828})
-
-The original object is immutable
-
 >>> v    # doctest: +SKIP
 pmap({'hello': 42, 'world': 3.14159})
 """

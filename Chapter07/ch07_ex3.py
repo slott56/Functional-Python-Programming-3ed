@@ -275,7 +275,7 @@ def rank_corr(pairs: Sequence[Pair]) -> float:
         for r in ranked
     )
     n = len(pairs)
-    return 1 - 6 * sum_d_2 / (n * (n ** 2 - 1))
+    return 1 - 6 * sum_d_2 / (n * (n**2 - 1))
 
 
 from pytest import fixture
