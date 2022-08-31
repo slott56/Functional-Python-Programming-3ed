@@ -4,7 +4,7 @@ Chapter 9, Example Set 2
 
 An example of an optimization problem:
 
-https://www.me.utexas.edu/~jensen/ORMM/models/unit/combinatorics/permute.html
+https://utw11041.utweb.utexas.edu/ORMM/models/unit/combinatorics/permute.html
 
 """
 
@@ -34,16 +34,19 @@ from itertools import permutations
 
 
 def assignment(cost: list[tuple[int, ...]]) -> list[tuple[int, ...]]:
-    n = len(cost)
-    perms = permutations(range(n))
-    alt = [(sum(cost[x][y] for y, x in enumerate(perm)), perm) for perm in perms]
+    n_tasks = len(cost)
+    perms = permutations(range(n_tasks))
+    alt = [
+        (sum(cost[task][agent] for agent, task in enumerate(perm)), perm)
+        for perm in perms
+    ]
     m = min(alt)[0]
     return [ans for s, ans in alt if s == m]
 
 
 REPL_assignment = """
 >>> from pprint import pprint
->>> cost= get_cost_matrix()
+>>> cost = get_cost_matrix()
 >>> len(cost)
 7
 >>> pprint(cost)
@@ -59,7 +62,8 @@ REPL_assignment = """
 >>> pprint(solutions)
 [(2, 4, 6, 1, 5, 3, 0), (2, 6, 0, 1, 5, 3, 4)]
 
->>> expected= tuple(map(lambda x:x-1, [3,5,7,2,6,4,1] ) )
+The original example was 1-based, so we subtract 1 from each assignment...
+>>> expected = tuple(map(lambda x:x-1, [3,5,7,2,6,4,1] ) )
 >>> expected
 (2, 4, 6, 1, 5, 3, 0)
 >>> expected in solutions
