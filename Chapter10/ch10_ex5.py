@@ -17,6 +17,9 @@ class Comparable(Protocol):
     def __gt__(self, __other: Any) -> bool:
         ...
 
+    def __hash__(self) -> int:
+        ...
+
 
 KT = TypeVar("KT", bound=Comparable)
 

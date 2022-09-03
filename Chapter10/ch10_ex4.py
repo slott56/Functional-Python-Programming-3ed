@@ -34,7 +34,7 @@ from typing import cast
 
 FloatFT = Callable[[float, float], float]
 
-sum2 = lambda data: reduce(cast(FloatFT, lambda x, y: x + y ** 2), data, 0.0)
+sum2 = lambda data: reduce(cast(FloatFT, lambda x, y: x + y**2), data, 0.0)
 sum = lambda data: reduce(cast(FloatFT, lambda x, y: x + y), data, 0.0)
 count = lambda data: reduce(cast(FloatFT, lambda x, y: x + 1), data, 0.0)
 min = lambda data: reduce(cast(FloatFT, lambda x, y: x if x < y else y), data)
@@ -80,7 +80,7 @@ from collections.abc import Iterable
 
 def sum2_mr(source_iter: Iterable[float]) -> float:
     return map_reduce(
-        map_fun=lambda y: y ** 2,
+        map_fun=lambda y: y**2,
         reduce_fun=lambda x, y: x + y,
         source=source_iter,
         initial=0,
@@ -97,7 +97,7 @@ import operator
 
 
 def sum2_mr2(source: Iterable[float]) -> float:
-    return map_reduce(lambda y: y ** 2, operator.add, source, 0)
+    return map_reduce(lambda y: y**2, operator.add, source, 0)
 
 
 def test_sum2_mr2() -> None:
@@ -130,7 +130,7 @@ REPL_reduce_initial = """
 
 from functools import partial, reduce
 
-psum2 = partial(reduce, lambda x, y: x + y ** 2)
+psum2 = partial(reduce, lambda x, y: x + y**2)
 pcount = partial(reduce, lambda x, y: x + 1)
 
 REPL_psum_pcount = """
