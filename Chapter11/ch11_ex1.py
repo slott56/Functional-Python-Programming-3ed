@@ -214,8 +214,7 @@ def fact(n: int) -> int:
     f: Callable[[int], int] = {
         n == 0: lambda n: 1,
         n == 1: lambda n: 1,
-        n == 2: lambda n: 2,
-        n > 2: lambda n: fact(n - 1) * n,
+        n >= 2: lambda n: fact(n - 1) * n,
     }[True]
     return f(n)
 
