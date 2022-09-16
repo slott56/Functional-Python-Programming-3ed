@@ -124,6 +124,30 @@ def test_logged_divmod_2(caplog: pytest.LogCaptureFixture) -> None:
     assert caplog.text.startswith("INFO     divmod:ch12_ex1.py:")
 
 
+def stringify(argument_function: Callable[[int, int], int]) -> Callable[[str], str]:
+    @wraps(argument_function)
+    def two_part_wrapper(text: str) -> str:
+        # The "before" part
+        arg1, arg2 = map(int, text.split(","))
+        int_result = argument_function(arg1, arg2)
+        # The "after" part
+        return str(int_result)
+
+    return two_part_wrapper
+
+
+REPL_two_part_wrapper = """
+>>> @stringify
+... def the_model(m: int, s: int) -> int:
+...     return m * 45 + s * 3
+...
+>>> the_model("5,6")
+'243'
+
+>>> 5*45 + 6*3
+243
+"""
+
 from collections.abc import Callable
 import decimal
 from typing import Any, Union, TypeVar
@@ -183,13 +207,13 @@ T = TypeVar("T")
 
 
 def bad_char_remove(
-    *char_list: str,
+    *bad_chars: str,
 ) -> Callable[[Callable[[str], T]], Callable[[str], T]]:
     def cr_decorator(function: Callable[[str], T]) -> Callable[[str], T]:
-        def clean_list(text: str, *, char_list: tuple[str, ...]) -> str:
-            if char_list:
+        def clean_list(text: str, *, to_replace: tuple[str, ...]) -> str:
+            if to_replace:
                 return clean_list(
-                    text.replace(char_list[0], ""), char_list=char_list[1:]
+                    text.replace(to_replace[0], ""), to_replace=to_replace[1:]
                 )
             return text
 
@@ -198,7 +222,7 @@ def bad_char_remove(
             try:
                 return function(text, **kwargs)
             except (ValueError, decimal.InvalidOperation):
-                cleaned = clean_list(text, char_list=char_list)
+                cleaned = clean_list(text, to_replace=bad_chars)
                 return function(cleaned, **kwargs)
 
         return wrap_char_remove

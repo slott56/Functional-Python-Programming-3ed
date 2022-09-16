@@ -27,7 +27,7 @@ def minus1(x: int) -> int:
 
 @compose(minus1)
 def pow2(x: int) -> int:
-    return cast(int, 2 ** x)
+    return cast(int, 2**x)
 
 
 # Note the obscure name. This creates a Mersenne prime, but it's called pow2
@@ -41,7 +41,7 @@ REPL_example_1 = """
 from collections.abc import Callable
 
 m1: Callable[[float], float] = lambda x: x - 1
-p2: Callable[[float], float] = lambda y: 2 ** y
+p2: Callable[[float], float] = lambda y: 2**y
 mersenne: Callable[[float], float] = lambda x: m1(p2(x))
 
 REPL_example_2 = """

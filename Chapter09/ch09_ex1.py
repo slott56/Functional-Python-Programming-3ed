@@ -502,6 +502,30 @@ def performance() -> None:
     print(f"min(choices,...) {min_choices_time:.3f}")
 
 
+REPL_combinations = """
+>>> import itertools
+>>> from pprint import pprint
+>>> pprint(
+... list(itertools.combinations([1,2,3,4,5,6], 2))
+... )
+[(1, 2),
+ (1, 3),
+ (1, 4),
+...
+ (4, 6),
+ (5, 6)]
+>>> pprint(
+... list(itertools.combinations_with_replacement([1,2,3,4,5,6], 2))
+... )
+[(1, 1),
+ (1, 2),
+ (1, 3),
+...
+ (5, 5),
+ (5, 6),
+ (6, 6)]
+"""
+
 __test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}
 
 if __name__ == "__main__":
