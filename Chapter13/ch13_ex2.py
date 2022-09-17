@@ -65,12 +65,12 @@ from pymonad.maybe import Maybe, Just
 
 
 @curry(2)  # type: ignore[misc]
-def come_out_roll(dice: DiceT, status: Maybe) -> Maybe:
+def initial_roll(dice: DiceT, status: Maybe) -> Maybe:
     d = dice()
     if sum(d) in (7, 11):
-        return Just(("win", sum(d), [d]))
+        return Just(("pass", sum(d), [d]))
     elif sum(d) in (2, 3, 12):
-        return Just(("lose", sum(d), [d]))
+        return Just(("fail", sum(d), [d]))
     else:
         return Just(("point", sum(d), [d]))
 
@@ -88,9 +88,9 @@ def point_roll(dice: DiceT, status: Maybe) -> Maybe:
 
     d = dice()
     if sum(d) == 7:
-        return Just(("craps", point, so_far + [d]))
+        return Just(("fail", point, so_far + [d]))
     elif sum(d) == point:
-        return Just(("win", point, so_far + [d]))
+        return Just(("pass", point, so_far + [d]))
     else:
         return Just(("point", point, so_far + [d])).then(point_roll(dice))
 
@@ -98,21 +98,21 @@ def point_roll(dice: DiceT, status: Maybe) -> Maybe:
 from pymonad.maybe import Maybe, Just
 
 
-def craps(dice: DiceT) -> Maybe:
-    outcome = Just(("", 0, [])).then(come_out_roll(dice)).then(point_roll(dice))
+def game_chain(dice: DiceT) -> Maybe:
+    outcome = Just(("", 0, [])).then(initial_roll(dice)).then(point_roll(dice))
     return outcome
 
 
 from unittest.mock import Mock
 
 
-def test_craps_win() -> None:
+def test_game_win() -> None:
     dice = Mock(side_effect=[(3, 4)])
-    r = craps(dice)
-    assert r.value == ("win", 7, [(3, 4)])
+    r = game_chain(dice)
+    assert r.value == ("pass", 7, [(3, 4)])
 
 
-def test_craps_point_win() -> None:
+def test_game_point_win() -> None:
     dice = Mock(side_effect=[(3, 3), (2, 2), (3, 3)])
-    r = craps(dice)
-    assert r.value == ("win", 6, [(3, 3), (2, 2), (3, 3)])
+    r = game_chain(dice)
+    assert r.value == ("pass", 6, [(3, 3), (2, 2), (3, 3)])
