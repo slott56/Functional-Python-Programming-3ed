@@ -686,7 +686,7 @@ def demo_mp_async(root: Path = SAMPLE_DATA, pool_size: int | None = None) -> Non
 def demo_cf_threads(root: Path = SAMPLE_DATA, pool_size: int = 4) -> None:
     pattern = "*itmaybeahack.com*.gz"
     combined: Counter[str] = Counter()
-    with futures.ThreadPoolExecutor(max_workers=pool_size) as workers:
+    with futures.ProcessPoolExecutor(max_workers=pool_size) as workers:
         file_iter = root.glob(LOG_PATTERN)
         for result in workers.map(analysis, file_iter):
             combined.update(result)
