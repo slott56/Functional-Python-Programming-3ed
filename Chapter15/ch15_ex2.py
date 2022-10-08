@@ -4,9 +4,10 @@ Chapter 15, Example Set 2
 """
 
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from typing import NoReturn
 
 
-def server_demo() -> None:
+def server_demo() -> NoReturn:
     httpd = HTTPServer(("localhost", 8080), SimpleHTTPRequestHandler)
     print(f"Serving on http://localhost:8080...")
     while True:

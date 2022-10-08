@@ -31,7 +31,7 @@ class Series(NamedTuple):
     ) -> "Series":
         return Series(name, list(map(Pair.create, source)))
 
-    def _as_listodict(self) -> list[dict[str, Any]]:
+    def _as_listofdicts(self) -> list[dict[str, Any]]:
         return [p._asdict() for p in self.data]
 
 
@@ -237,15 +237,15 @@ def test_anscombe_filter() -> None:
 
 def test_serialize() -> None:
     s = Series("I", [Pair(2, 3), Pair(5, 7)])
-    assert serialize("text/csv", s._as_listodict()) == (b"x,y\r\n2,3\r\n5,7\r\n")
-    assert serialize("application/json", s._as_listodict()) == (
+    assert serialize("text/csv", s._as_listofdicts()) == (b"x,y\r\n2,3\r\n5,7\r\n")
+    assert serialize("application/json", s._as_listofdicts()) == (
         b'[{"x": 2, "y": 3}, {"x": 5, "y": 7}]'
     )
-    html_content = serialize("text/html", s._as_listodict())
+    html_content = serialize("text/html", s._as_listofdicts())
     assert b'<tr><td column="x">2</td><td column="y">3</td></tr>' in html_content
     assert b'<tr><td column="x">5</td><td column="y">7</td></tr>' in html_content
     assert serialize(
-        "application/xml", s._as_listodict(), document_tag="Series", row_tag="Pair"
+        "application/xml", s._as_listofdicts(), document_tag="Series", row_tag="Pair"
     ) == (
         b'<?xml version="1.0" encoding="utf-8"?>\n<Series><Pair><x>2</x><y>3</y></Pair><Pair><x>5</x><y>7</y></Pair></Series>\n'
     )
@@ -289,11 +289,11 @@ def index_view() -> Response:
     response_format = format()
     # 2. Get data
     data = get_series_map(app.config["FILE_PATH"])
-    index_listodict = [{"Series": k} for k in data.keys()]
+    index_listofdicts = [{"Series": k} for k in data.keys()]
     # 3. Prepare Response
     try:
         content_bytes = serialize(
-            response_format, index_listodict, document_tag="Index", row_tag="Series"
+            response_format, index_listofdicts, document_tag="Index", row_tag="Series"
         )
         response = make_response(content_bytes, 200, {"Content-Type": response_format})
         return response
@@ -308,7 +308,7 @@ def series_view(series_id: str, form: str | None = None) -> Response:
     # 2. Get data (and validate some more)
     data = get_series_map(app.config["FILE_PATH"])
     try:
-        dataset = anscombe_filter(series_id, data)._as_listodict()
+        dataset = anscombe_filter(series_id, data)._as_listofdicts()
     except KeyError:
         abort(404, "Unknown Series")
     # 3. Prepare Response
