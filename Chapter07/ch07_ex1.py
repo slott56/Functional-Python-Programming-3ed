@@ -249,4 +249,19 @@ REPL_test_lazy_leg = """
 115.1751
 """
 
+REPL_test_constructors = """
+>>> start = PointNT(latitude=37.54901619777347, longitude=-76.33029518659048)
+>>> end = PointNT(latitude=37.840832, longitude=-76.273834)
+
+>>> LegNT(start, end, round(haversine(start, end), 4))
+LegNT(start=PointNT(latitude=37.54901619777347, longitude=-76.33029518659048), end=PointNT(latitude=37.840832, longitude=-76.273834), distance=17.7246)
+
+>>> row = ['-76.459503', '38.331501', '0']
+>>> PointNT(*map(float, pick_lat_lon(*row)))
+PointNT(latitude=38.331501, longitude=-76.459503)
+
+>>> PointNT(longitude=float(row[0]), latitude=float(row[1]))
+PointNT(latitude=38.331501, longitude=-76.459503)
+"""
+
 __test__ = {name: value for name, value in globals().items() if name.startswith("REPL")}
