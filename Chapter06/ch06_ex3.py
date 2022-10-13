@@ -53,31 +53,6 @@ def row_iter_kml(file_obj: TextIO) -> Iterator[list[str]]:
     )
 
 
-#
-# def comma_split(text: str) -> List[str]:
-#     return text.split(",")
-#
-# from typing import TextIO, Iterator, Tuple, cast
-# def float_lat_lon3(file_obj: TextIO) -> Iterator[Tuple[float, ...]]:
-#     ns_map = {
-#         "ns0": "http://www.opengis.net/kml/2.2",
-#         "ns1": "http://www.google.com/kml/ext/2.2"}
-#     xpath = (
-#         "./ns0:Document/ns0:Folder/"
-#         "ns0:Placemark/ns0:Point/ns0:coordinates")
-#     doc = XML.parse(file_obj)
-#     return (
-#         tuple(
-#             map(float,
-#                 pick_lat_lon(*comma_split(
-#                     cast(str, coordinates.text)
-#                 ))
-#                )
-#         )
-#         for coordinates in doc.findall(xpath, ns_map)
-#     )
-
-
 REPL_test_row_iter_kml = """
 >>> import io
 >>> doc= io.StringIO('''<?xml version="1.0" encoding="UTF-8"?>
@@ -111,17 +86,6 @@ def pick_lat_lon(lon: str, lat: str, alt: str) -> tuple[str, str]:
 def float_lat_lon(row_iter: Iterator[list[str]]) -> Iterator[tuple[float, float]]:
     lat_lon_iter = (pick_lat_lon(*row) for row in row_iter)
     return ((float(lat), float(lon)) for lat, lon in lat_lon_iter)
-
-
-#
-# def float_lat_lon(
-#         row_iter: Iterator[Tuple[str, ...]]) -> Iterator[Tuple[float, ...]]:
-#     return (
-#         tuple(
-#             map(float, pick_lat_lon(*row))
-#         )
-#         for row in row_iter
-#     )
 
 
 def test_kml_parser() -> None:
@@ -217,30 +181,6 @@ def row_iter_gpl(file_obj: TextIO) -> Head_Body:
     return read_tail(*read_head(file_obj))
 
 
-#
-# Head_Body = Tuple[Tuple[str, str], Iterator[List[str]]]
-# def row_iter_gpl(file_obj: TextIO) -> Head_Body:
-#     header_pat = re.compile(
-#         r"GIMP Palette\nName:\s*(.*?)\nColumns:\s*(.*?)\n#\n",
-#         re.M)
-#
-#     def read_head(
-#             file_obj: TextIO
-#         ) -> Tuple[Tuple[str, str], TextIO]:
-#         match = header_pat.match("".join(file_obj.readline() for _ in range(4)))
-#         return (match.group(1), match.group(2)), file_obj
-#
-#     def read_tail(
-#             headers: Tuple[str, str],
-#             file_obj: TextIO) -> Head_Body:
-#         return (
-#             headers,
-#             (next_line.split() for next_line in file_obj)
-#         )
-#
-#     return read_tail(*read_head(file_obj))
-
-
 def test_row_iter_gpl() -> None:
     from pathlib import Path
 
@@ -274,27 +214,6 @@ def color_palette(
         Color(int(r), int(g), int(b), " ".join(name)) for r, g, b, *name in row_iter
     )
     return name, columns, colors
-
-
-# from collections import namedtuple
-# Color = namedtuple("Color", ("red", "green", "blue", "name"))
-#
-# from typing import NamedTuple
-# class Color(NamedTuple):
-#     red: int
-#     blue: int
-#     green: int
-#     name: str
-#
-# def color_palette(
-#         headers: Tuple[str, str],
-#         row_iter: Iterator[List[str]]
-#     ) -> Tuple[str, str, Tuple[Color, ...]]:
-#     name, columns = headers
-#     colors = tuple(
-#         Color(int(r), int(g), int(b), " ".join(name))
-#         for r, g, b, *name in row_iter)
-#     return name, columns, colors
 
 
 def test_color_palette() -> None:

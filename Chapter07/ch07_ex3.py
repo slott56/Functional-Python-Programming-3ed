@@ -7,9 +7,6 @@ import Chapter04.ch04_ex4
 
 # Raw Data Parser
 
-# from collections import namedtuple
-# Pair = namedtuple("Pair", ("x", "y"))
-
 from typing import NamedTuple
 
 
@@ -224,13 +221,6 @@ class Ranked_XY(PRecord):  # type: ignore [type-arg]
     raw = field(type=Pair)
 
 
-# from pyrsistent import PRecord, field, PMap, pmap
-#
-# class Ranked_XY(PRecord):  # type: ignore [type-arg]
-#     rank = field(type=PMap)
-#     raw = field(type=Pair)
-
-
 def rank_xy(pairs: Sequence[Pair]) -> Iterator[Ranked_XY]:
     data = list(Ranked_XY(rank=pmap(), raw=p) for p in pairs)
 
@@ -244,25 +234,6 @@ def rank_xy(pairs: Sequence[Pair]) -> Iterator[Ranked_XY]:
         )
 
     yield from iter(data)
-
-
-#
-# def rank_xy(pairs: Sequence[Pair]) -> Iterator[Ranked_XY]:
-#     data = list(Ranked_XY(rank=pmap(), raw=p) for p in pairs)
-#
-#     for attribute_name in ('x', 'y'):
-#         ranked = rank(
-#             data,
-#             lambda rxy: cast(float, getattr(rxy.raw, attribute_name))
-#         )
-#         data = list(
-#             r[1].set(
-#                 rank=r[1].rank.set(attribute_name, r[0])  # type: ignore [arg-type]
-#             )
-#             for r in ranked
-#         )
-#
-#     yield from iter(data)
 
 
 from collections.abc import Sequence

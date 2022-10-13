@@ -103,9 +103,13 @@ def all_print(start: Path) -> int:
 
 
 def test_all_print() -> None:
+    """
+    This test depends on the code repository's detailed content.
+    A small change to an example can lead to changing this test, also.
+    """
     from pathlib import Path
 
-    assert all_print(Path.cwd()) == 228  # Depends on EXACT code content -- very fiddly
+    assert all_print(Path.cwd()) == 232  # Depends on EXACT code content -- very fiddly
 
 
 def fastexp(a: float, n: int) -> float:

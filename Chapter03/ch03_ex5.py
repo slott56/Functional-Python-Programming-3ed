@@ -46,8 +46,6 @@ REPL_rgb_functions_3 = """
 >>> red(almond)
 239
 """
-# from collections import namedtuple
-# Color = namedtuple("Color", ("red", "green", "blue", "name"))
 
 from typing import NamedTuple
 
@@ -60,14 +58,6 @@ class Color(NamedTuple):
     blue: int
     name: str
 
-
-# from typing import NamedTuple
-# class Color(NamedTuple):
-#     """An RGB color."""
-#     red: int
-#     green: int
-#     blue: int
-#     name: str
 
 REPL_color_tuple = """
 >>> color = Color(203, 65, 84, "Brick Red")

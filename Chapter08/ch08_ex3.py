@@ -187,20 +187,6 @@ def row_iter_csv_tab(*filepaths: Path) -> Iterator[list[str]]:
         yield from chain(*readers)
 
 
-#
-# from contextlib import ExitStack
-# import csv
-# def row_iter_csv_tab(*filenames: str) -> Iterator[List[str]]:
-#     with ExitStack() as stack:
-#         files: List[TextIO] = [
-#             stack.enter_context(cast(TextIO, open(name, 'r')))
-#             for name in filenames
-#         ]
-#         # readers = [csv.reader(f, delimiter='\t') for f in files]
-#         readers = map(lambda f: csv.reader(f, delimiter='\t'), files)
-#         yield from chain(*readers)
-
-
 def test_row_iter_csv_tab() -> None:
     filenames = Path("Anscombe.txt"), Path("crayola.gpl")
     data = list(row_iter_csv_tab(*filenames))
@@ -242,20 +228,6 @@ def groupby_2(
     for g in groups:
         yield g, iter(groups[g])
 
-
-# from collections import defaultdict
-# from typing import Iterable, Callable, Tuple, List, Dict
-# D_ = TypeVar("D_")
-# K_ = TypeVar("K_")
-# def groupby_2(
-#         iterable: Iterable[D_],
-#         key: Callable[[D_], K_]
-#     ) -> Iterator[Tuple[K_, Iterator[D_]]]:
-#     groups: Dict[K_, List[D_]] = defaultdict(list)
-#     for item in iterable:
-#         groups[key(item)].append(item)
-#     for g in groups:
-#         yield g, iter(groups[g])
 
 REPL_groupby_2 = """
 >>> from Chapter07.ch07_ex1 import get_trip
@@ -490,27 +462,6 @@ def get_trip_starmap(url: str) -> List[LegNT]:
         trip = list(starmap(make_leg, pair_iter))
         # -------- Used here
     return trip
-
-
-#
-# from Chapter07.ch07_ex1 import float_lat_lon, Leg, Point
-# from Chapter06.ch06_ex3 import row_iter_kml
-# from Chapter04.ch04_ex1 import legs, haversine
-# import urllib.request
-# from typing import List, Callable
-#
-# def get_trip_starmap(url: str) -> List[Leg]:
-#     make_leg: Callable[[Point, Point], Leg] = (
-#         lambda start, end:
-#         Leg(start, end, haversine(start, end))
-#     )
-#     with urllib.request.urlopen(url) as source:
-#         path_iter = float_lat_lon(
-#             row_iter_kml(cast(TextIO, source))
-#         )
-#         pair_iter = legs(path_iter)
-#         trip = list(starmap(make_leg, pair_iter))
-#     return trip
 
 
 def test_get_trip_starmap() -> None:

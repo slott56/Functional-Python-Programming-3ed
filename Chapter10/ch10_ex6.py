@@ -12,15 +12,6 @@ def zip_format(zip: Any) -> str:
     raise NotImplementedError(f"unsupported {type(zip)} for zip_format()")
 
 
-# from functools import singledispatch
-# from typing import Any
-#
-# @singledispatch
-# def zip_format(zip: Any) -> str:
-#     raise NotImplementedError(f"unsupported {type(zip)} for zip_format()")
-#
-
-
 @zip_format.register
 def _(zip: int) -> str:
     return f"{zip:05d}"
@@ -37,21 +28,6 @@ def _(zip: str) -> str:
         zip, box = zip.split("-")
     return f"{zip:0>5s}"
 
-
-#
-# @zip_format.register
-# def _(zip: int) -> str:
-#     return f"{zip:05d}"
-#
-# @zip_format.register
-# def _(zip: float) -> str:
-#     return f"{zip:05.0f}"
-#
-# @zip_format.register
-# def _(zip: str) -> str:
-#     if "-" in zip:
-#         zip, box = zip.split("-")
-#     return f"{zip:0>5s}"
 
 REPL_demo_zip = """
 >>> zip_format(12345)

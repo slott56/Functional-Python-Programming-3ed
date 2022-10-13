@@ -187,7 +187,6 @@ def lat_lon_csv(source: TextIO) -> Iterator[list[str]]:
     return rdr
 
 
-# ex_2_3_b -- removed from the text
 from collections.abc import Iterator, Iterable
 from typing import Any, TypeVar
 

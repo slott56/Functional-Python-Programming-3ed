@@ -62,10 +62,6 @@ def test_stdev() -> None:
     assert stdev(d) == 2.0
 
 
-# def z(x, μ_x, σ_x): is valid, but sometimes
-# hard to work with.
-
-
 def z(x: float, m_x: float, s_x: float) -> float:
     return (x - m_x) / s_x
 
@@ -99,15 +95,6 @@ def corr(samples1: Sequence[float], samples2: Sequence[float]) -> float:
     r = sum(zx1 * zx2 for zx1, zx2 in zip(z_1, z_2)) / len(samples1)
     return r
 
-
-#
-# def corr(samples1: Sequence[float], samples2: Sequence[float]) -> float:
-#     m_1, s_1 = mean(samples1), stdev(samples1)
-#     m_2, s_2 = mean(samples2), stdev(samples2)
-#     z_1 = (z(x, m_1, s_1) for x in samples1)
-#     z_2 = (z(x, m_2, s_2) for x in samples2)
-#     r = sum(zx1*zx2 for zx1, zx2 in zip(z_1, z_2))/len(samples1)
-#     return r
 
 from pytest import approx
 
