@@ -57,8 +57,9 @@ def rng() -> tuple[int, int]:
 
 
 from collections.abc import Callable
+from typing import TypeAlias
 
-DiceT = Callable[[], tuple[int, int]]
+DiceT: TypeAlias = Callable[[], tuple[int, int]]
 
 from pymonad.tools import curry
 from pymonad.maybe import Maybe, Just

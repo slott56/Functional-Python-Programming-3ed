@@ -30,9 +30,9 @@ REPL_reductions = """
 
 from collections.abc import Callable
 from functools import reduce
-from typing import cast
+from typing import cast, TypeAlias
 
-FloatFT = Callable[[float, float], float]
+FloatFT: TypeAlias = Callable[[float, float], float]
 
 sum2 = lambda data: reduce(cast(FloatFT, lambda x, y: x + y**2), data, 0.0)
 sum = lambda data: reduce(cast(FloatFT, lambda x, y: x + y), data, 0.0)

@@ -449,10 +449,10 @@ REPL_higher_order_filter_2 = """
 """
 
 from collections.abc import Callable, Iterable, Iterator
-from typing import Any
+from typing import Any, TypeAlias
 
-Conv_F = Callable[[float], float]
-Leg = tuple[Any, Any, float]
+Conv_F: TypeAlias = Callable[[float], float]
+Leg: TypeAlias = tuple[Any, Any, float]
 
 
 def convert(conversion: Conv_F, trip: Iterable[Leg]) -> Iterator[float]:
@@ -460,8 +460,9 @@ def convert(conversion: Conv_F, trip: Iterable[Leg]) -> Iterator[float]:
 
 
 from collections.abc import Callable
+from typing import TypeAlias
 
-Conversion = Callable[[float], float]
+Conversion: TypeAlias = Callable[[float], float]
 
 to_miles: Conversion = lambda nm: nm * 6076.12 / 5280
 
@@ -471,8 +472,9 @@ to_nm: Conversion = lambda nm: nm
 
 from collections.abc import Callable
 from operator import itemgetter
+from typing import TypeAlias
 
-Selector = Callable[[tuple[Any, ...]], Any]
+Selector: TypeAlias = Callable[[tuple[Any, ...]], Any]
 
 fst: Selector = itemgetter(0)
 
@@ -530,11 +532,12 @@ REPL_test_convert = """
 """
 
 from collections.abc import Callable, Iterable, Iterator
+from typing import TypeAlias
 
-Point = tuple[float, float]
-Leg_Raw = tuple[Point, Point]
-Point_Func = Callable[[Point, Point], float]
-Leg_D = tuple[Point, Point, float]
+Point: TypeAlias = tuple[float, float]
+Leg_Raw: TypeAlias = tuple[Point, Point]
+Point_Func: TypeAlias = Callable[[Point, Point], float]
+Leg_D: TypeAlias = tuple[Point, Point, float]
 
 
 def cons_distance(
@@ -593,8 +596,9 @@ REPL_test_cons_distance3 = """
 """
 
 from collections.abc import Callable, Iterator
+from typing import TypeAlias
 
-Num_Conv = Callable[[str], float]
+Num_Conv: TypeAlias = Callable[[str], float]
 
 
 def numbers_from_rows(conversion: Num_Conv, text: str) -> Iterator[float]:
@@ -678,9 +682,9 @@ REPL_demo_group_by_iter = """
 
 
 from collections.abc import Callable, Iterator, Iterable
-from typing import Any
+from typing import Any, TypeAlias
 
-ItemFilterPredicate = Callable[[Any], bool]
+ItemFilterPredicate: TypeAlias = Callable[[Any], bool]
 
 
 def group_filter_iter(

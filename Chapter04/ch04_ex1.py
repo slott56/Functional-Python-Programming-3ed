@@ -9,9 +9,9 @@ import csv
 from typing import List, TextIO, Iterable, Tuple, Iterator
 
 from collections.abc import Callable, Sequence
-from typing import Any
+from typing import Any, TypeAlias
 
-Extractor = Callable[[Sequence[Any]], Any]
+Extractor: TypeAlias = Callable[[Sequence[Any]], Any]
 
 fst: Extractor = lambda x: x[0]
 snd: Extractor = lambda x: x[1]
@@ -23,7 +23,7 @@ def test_fst_snd() -> None:
 
 
 from collections.abc import Iterable
-from typing import TextIO, Iterable
+from typing import TextIO
 import xml.etree.ElementTree as XML
 
 
@@ -103,9 +103,10 @@ def test_pick_lat_lon() -> None:
 
 
 from collections.abc import Iterable
+from typing import TypeAlias
 
-Rows = Iterable[list[str]]
-LL_Text = tuple[str, str]
+Rows: TypeAlias = Iterable[list[str]]
+LL_Text: TypeAlias = tuple[str, str]
 
 
 def lat_lon_kml(row_iter: Rows) -> Iterable[LL_Text]:
@@ -250,28 +251,28 @@ REPL_demo = """
 """
 
 REPL_legs_iter_example = """
-Iterator as input:
+# Iterator as input:
 >>> list(legs(x for x in range(3)))
 [(0, 1), (1, 2)]
 
-List object as input:
+# List object as input:
 >>> list(legs([0, 1, 2]))
 Traceback (most recent call last):
 ...
 TypeError: 'list' object is not an iterator
 
-Explicit iterator created from list object:
+# Explicit iterator created from list object:
 >>> list(legs(iter([0,1,2])))
 [(0, 1), (1, 2)]
 """
 
 from collections.abc import Iterator, Iterable, Callable
-from typing import Any
+from typing import TypeAlias
 
-Waypoint = tuple[float, float]
-Pairs_Iter = Iterator[Waypoint]
-Leg = tuple[Waypoint, Waypoint]
-Leg_Iter = Iterable[Leg]
+Waypoint: TypeAlias = tuple[float, float]
+Pairs_Iter: TypeAlias = Iterator[Waypoint]
+Leg: TypeAlias = tuple[Waypoint, Waypoint]
+Leg_Iter: TypeAlias = Iterable[Leg]
 
 
 def legs_filter(
@@ -328,9 +329,10 @@ REPL_test_trip = """
 """
 
 from collections.abc import Iterator, Iterable
+from typing import TypeAlias
 
-Text_Iter = Iterable[tuple[str, str]]
-LL_Iter = Iterable[tuple[float, float]]
+Text_Iter: TypeAlias = Iterable[tuple[str, str]]
+LL_Iter: TypeAlias = Iterable[tuple[float, float]]
 
 
 def floats_from_pair(lat_lon_iter: Text_Iter) -> LL_Iter:
@@ -359,12 +361,13 @@ REPL_floats_from_pair = """
 """
 
 from math import radians, sin, cos, sqrt, asin
+from typing import TypeAlias
 
 MI = 3959
 NM = 3440
 KM = 6371
 
-Point = tuple[float, float]
+Point: TypeAlias = tuple[float, float]
 
 
 def haversine(p1: Point, p2: Point, R: float = NM) -> float:

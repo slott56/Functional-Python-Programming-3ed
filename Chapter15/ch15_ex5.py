@@ -60,7 +60,10 @@ def anscombe_filter(set_id: str, raw_data_map: dict[str, Series]) -> Series:
     return raw_data_map[set_id]
 
 
-Serializer = Callable[[list[dict[str, Any]]], bytes]
+from collections.abc import Callable
+from typing import Any, TypeAlias
+
+Serializer: TypeAlias = Callable[[list[dict[str, Any]]], bytes]
 
 
 def serialize(format: str | None, data: list[dict[str, Any]], **kwargs: str) -> bytes:

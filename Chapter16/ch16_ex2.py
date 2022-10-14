@@ -16,7 +16,7 @@ expected_defects = [
 
 # Raw data reader.
 
-from typing import TextIO, NamedTuple
+from typing import TextIO, NamedTuple, TypeAlias
 import csv
 from collections import Counter
 
@@ -27,7 +27,7 @@ class Defect(NamedTuple):
     serial_number: str
 
 
-Shift_Type = tuple[str, str]
+Shift_Type: TypeAlias = tuple[str, str]
 
 
 def defect_reduce(input_file: TextIO) -> Counter[Shift_Type]:
@@ -63,60 +63,12 @@ Counter({('3', 'C'): 49,
          ('2', 'D'): 5})
 """
 
-# Summary data reader
-
-from typing import TextIO, NamedTuple
-from collections import Counter
-import csv
-
-
-class DefectCount(NamedTuple):
-    shift: str
-    defect_type: str
-    total_count: int
-
-    @classmethod
-    def create(cls: type["DefectCount"], source: dict[str, str]) -> "DefectCount":
-        return cls(source["shift"], source["defect_type"], int(source["count"]))
-
-
-def defect_summary(source: TextIO) -> dict[Shift_Type, int]:
-    rdr = csv.DictReader(source)
-    count_iter = (DefectCount.create(row) for row in rdr)
-    key_value_iter = map(
-        lambda d: ((d.shift, d.defect_type), d.total_count), count_iter
-    )
-    return dict(key_value_iter)
-
-
-REPL_defect_counts = """
->>> import io
->>> source = io.StringIO('''shift,defect_type,count
-... 1,A,15
-... 2,A,26
-... 3,A,33
-... 1,B,21
-... 2,B,31
-... 3,B,17
-... 1,C,45
-... 2,C,34
-... 3,C,49
-... 1,D,13
-... 2,D,5
-... 3,D,20''')
->>> defects = defect_summary(source)
->>> len(defects)
-12
-
->>> sum(defects.values())
-309
-"""
-
 
 from collections.abc import Callable
+from typing import TypeAlias
 
-ShiftDefect = tuple[str, str]
-SourceCounter = Counter[ShiftDefect]
+ShiftDefect: TypeAlias = tuple[str, str]
+SourceCounter: TypeAlias = Counter[ShiftDefect]
 
 
 def summarize_by(
@@ -277,16 +229,7 @@ REPL_contingency_table = """
 >>> with source_path.open() as input:
 ...     defect_counts = defect_reduce(input)
 
->>> contingency_table(expected(defect_counts), defect_counts)
-                               Contingency Table                                
-┏━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━┓
-┃ shift ┃ A obs ┃ A exp ┃ B obs ┃ B exp ┃ C obs ┃ C exp ┃ D obs ┃ D exp ┃ tot… ┃
-┡━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━┩
-│ 1     │  15   │ 22.51 │  21   │ 20.99 │  45   │ 38.94 │  13   │ 11.56 │  94  │
-│ 2     │  26   │ 22.99 │  31   │ 21.44 │  34   │ 39.77 │   5   │ 11.81 │  96  │
-│ 3     │  33   │ 28.50 │  17   │ 26.57 │  49   │ 49.29 │  20   │ 14.63 │ 119  │
-│ total │  74   │       │  69   │       │ 128   │       │  38   │       │ 309  │
-└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴──────┘
+
 """
 
 

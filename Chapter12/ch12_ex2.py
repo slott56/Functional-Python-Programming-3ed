@@ -4,9 +4,9 @@ Chapter 12, Example Set 2
 """
 from collections.abc import Callable
 from functools import wraps
-from typing import cast, TypeVar
+from typing import cast, TypeVar, TypeAlias
 
-IntFuncT = Callable[[int], int]
+IntFuncT: TypeAlias = Callable[[int], int]
 DFT = TypeVar("DFT", bound=IntFuncT)
 
 
@@ -34,18 +34,6 @@ def pow2(x: int) -> int:
 
 REPL_example_1 = """
 >>> pow2(17)
-131071
-"""
-
-
-from collections.abc import Callable
-
-m1: Callable[[float], float] = lambda x: x - 1
-p2: Callable[[float], float] = lambda y: 2**y
-mersenne: Callable[[float], float] = lambda x: m1(p2(x))
-
-REPL_example_2 = """
->>> mersenne(17)
 131071
 """
 

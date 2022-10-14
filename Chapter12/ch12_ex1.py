@@ -150,9 +150,9 @@ REPL_two_part_wrapper = """
 
 from collections.abc import Callable
 import decimal
-from typing import Any, Union, TypeVar
+from typing import Any, Union, TypeVar, TypeAlias
 
-Number = Union[decimal.Decimal, float]
+Number: TypeAlias = Union[decimal.Decimal, float]
 NumT = TypeVar("NumT", bound=Number)
 
 
@@ -338,7 +338,7 @@ def to_int(text: str, base: int = 10) -> int:
     return int(text, base)
 
 
-to_int2 = cleanse_before(drop_punct)(int)
+to_int2 = cleanse_before(drop_punct2)(int)
 
 # reveal_type(to_int)
 # reveal_type(to_int2)
@@ -356,10 +356,10 @@ REPL_cleanse_before = """
 """
 
 from collections.abc import Iterable, Iterator
-from typing import cast
+from typing import cast, TypeAlias
 
 # Note TypeVar T and ParamSpec P defined above
-FloatFuncT = Callable[..., Iterator[float]]
+FloatFuncT: TypeAlias = Callable[..., Iterator[float]]
 FDT = TypeVar("FDT", bound=FloatFuncT)
 
 

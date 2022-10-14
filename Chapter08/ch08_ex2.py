@@ -28,10 +28,10 @@ def find_first(terminate: Callable[[T], bool], iterator: Iterator[T]) -> T:
 
 from itertools import count
 from collections.abc import Iterator
-from typing import NamedTuple
+from typing import NamedTuple, TypeAlias
 
 Pair = NamedTuple("Pair", [("flt_count", float), ("int_count", float)])
-Pair_Gen = Iterator[Pair]
+Pair_Gen: TypeAlias = Iterator[Pair]
 
 source: Pair_Gen = (
     Pair(fc, ic) for fc, ic in zip(count(0, 0.1), (0.1 * c for c in count()))

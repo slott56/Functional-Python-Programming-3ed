@@ -46,9 +46,9 @@ False
 
 from collections.abc import Iterable
 from functools import total_ordering
-from typing import Union, Any, cast
+from typing import Union, Any, cast, TypeAlias
 
-CardInt = Union["Card", int]
+CardInt: TypeAlias = Union["Card", int]
 
 
 @total_ordering
@@ -241,15 +241,6 @@ REPL_order_2 = """
 >>> c3h = Card2(3, '\u2665')
 >>> c4c = Card2(4, '\u2663')
 >>> c2s <= c3h < c4c
-True
-
->>> c3h >= c3h
-True
-
->>> c3h > c2s
-True
-
->>> c4c != c2s
 True
 
 >>> c2s = Card2(2, '\u2660')

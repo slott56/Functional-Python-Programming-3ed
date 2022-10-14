@@ -4,8 +4,9 @@ Chapter 3, Example Set 5
 """
 
 from collections.abc import Callable
+from typing import TypeAlias
 
-Extractor = Callable[[tuple[int, int, int, str]], int]
+Extractor: TypeAlias = Callable[[tuple[int, int, int, str]], int]
 
 red: Extractor = lambda color: color[0]
 
@@ -25,8 +26,9 @@ REPL_rgb_functions = """
 
 
 from collections.abc import Callable
+from typing import TypeAlias
 
-RGB = tuple[int, int, int, str]
+RGB: TypeAlias = tuple[int, int, int, str]
 
 redt: Callable[[RGB], int] = lambda color: color[0]
 

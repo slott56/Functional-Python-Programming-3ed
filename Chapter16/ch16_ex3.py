@@ -86,7 +86,7 @@ def Gamma_Half(k: Union[int, Fraction]) -> Fraction:
             g = Fraction(fact(k - 1), 1)
         case Fraction() if k.denominator == 2:
             n = k - Fraction(1, 2)
-            g = fact(2 * n) / (Fraction(4 ** n) * fact(n)) * sqrt_pi
+            g = fact(2 * n) / (Fraction(4**n) * fact(n)) * sqrt_pi
         case _:
             raise ValueError(f"Can't compute Γ({k})")
     return g

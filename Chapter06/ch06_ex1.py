@@ -97,16 +97,12 @@ def all_print(start: Path) -> int:
             elif path.is_dir():
                 if not path.stem.startswith("."):
                     pending.append(path)
-            else:  # Ignore other file system objects
+            else:  # Ignore other filesystem objects
                 pass
     return count
 
 
 def test_all_print() -> None:
-    """
-    This test depends on the code repository's detailed content.
-    A small change to an example can lead to changing this test, also.
-    """
     from pathlib import Path
 
     assert all_print(Path.cwd()) == 232  # Depends on EXACT code content -- very fiddly

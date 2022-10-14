@@ -629,12 +629,12 @@ def analysis(log_path: Path) -> dict[str, int]:
 
 
 from collections.abc import Callable
-from typing import cast, Any
+from typing import cast, Any, TypeAlias
 from functools import wraps
 import time
 
-FuncT = Callable[..., Any]
-DecoT = Callable[[FuncT], FuncT]
+FuncT: TypeAlias = Callable[..., Any]
+DecoT: TypeAlias = Callable[[FuncT], FuncT]
 
 
 def show_time(label: str) -> DecoT:

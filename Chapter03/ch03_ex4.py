@@ -180,8 +180,9 @@ def test_series() -> None:
 
 
 from collections.abc import Callable, Iterable, Iterator
+from typing import TypeAlias
 
-Pair = tuple[str, str]
+Pair: TypeAlias = tuple[str, str]
 row_float: Callable[[Iterable[str]], Iterator[float]] = lambda row: map(float, row)
 
 from typing import TextIO, Iterator

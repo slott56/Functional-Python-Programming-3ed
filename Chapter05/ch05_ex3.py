@@ -59,9 +59,10 @@ REPL_test_Sum_Filter = """
 """
 
 from collections.abc import Callable, Iterator, Iterable
+from typing import TypeAlias
 
-Predicate = Callable[[float], bool]
-Transformation = Callable[[float], float]
+Predicate: TypeAlias = Callable[[float], bool]
+Transformation: TypeAlias = Callable[[float], float]
 
 
 def sum_filter_f(

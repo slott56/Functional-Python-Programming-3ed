@@ -35,9 +35,10 @@ REPL_tuples = """
 """
 
 from collections.abc import Callable
+from typing import TypeAlias
 
-Point = tuple[float, float]
-Leg = tuple[Point, Point, float]
+Point: TypeAlias = tuple[float, float]
+Leg: TypeAlias = tuple[Point, Point, float]
 
 start: Callable[[Leg], Point] = lambda leg: leg[0]
 

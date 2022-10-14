@@ -131,7 +131,7 @@ def row_iter_csv(source: TextIO) -> Iterator[list[str]]:
 from typing import cast
 
 
-def float_or_none(data: str) -> float | None:
+def float_none(data: str) -> float | None:
     try:
         data_f = float(data)
         return data_f
@@ -140,10 +140,11 @@ def float_or_none(data: str) -> float | None:
 
 
 from collections.abc import Callable
+from typing import TypeAlias
 
-R_Float = list[float | None]
+R_Float: TypeAlias = list[float | None]
 
-float_row: Callable[[list[str]], R_Float] = lambda row: list(map(float_or_none, row))
+float_row: Callable[[list[str]], R_Float] = lambda row: list(map(float_none, row))
 all_numeric: Callable[[R_Float], bool] = lambda row: all(row) and len(row) == 8
 
 
@@ -161,9 +162,9 @@ def test_csv_parser() -> None:
 
 
 from collections.abc import Iterator
-from typing import TextIO
+from typing import TextIO, TypeAlias
 
-Head_Body = tuple[tuple[str, str], Iterator[list[str]]]
+Head_Body: TypeAlias = tuple[tuple[str, str], Iterator[list[str]]]
 
 
 def row_iter_gpl(file_obj: TextIO) -> Head_Body:

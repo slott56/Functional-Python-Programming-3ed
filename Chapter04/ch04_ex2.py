@@ -26,11 +26,11 @@ False
 """
 
 
-from typing import Any, TypeVar
+from typing import Any, TypeVar, TypeAlias
 from collections.abc import Iterable, Iterator
 
-Waypoint = tuple[float, float]
-Leg = tuple[Waypoint, Waypoint, float]
+Waypoint: TypeAlias = tuple[float, float]
+Leg: TypeAlias = tuple[Waypoint, Waypoint, float]
 
 
 def wrap(leg_iter: Iterable[Leg]) -> Iterator[tuple[float, Leg]]:

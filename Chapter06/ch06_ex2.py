@@ -3,9 +3,9 @@
 Chapter 6, Example Set 2
 """
 
-from typing import Iterator
+from typing import Iterator, TypeAlias
 
-Point = tuple[float, float]
+Point: TypeAlias = tuple[float, float]
 
 
 def syntax_check_1(trip: list[tuple[Point, Point, float]]) -> Iterator[float]:
@@ -45,7 +45,7 @@ REPL_quantized = """
 73
 
 # See Chapter 4 for ways to parse "file:./Winter%202012-2013.kml"
-# We want to build a trip variable with the sequence of tuples.
+# We want to build a trip variable with the sequence of tuples
 
 >>> from collections import Counter
 
@@ -61,7 +61,7 @@ REPL_quantized = """
 
 
 from collections.abc import Iterable
-from typing import Any, TypeVar, Protocol
+from typing import Any, TypeVar, Protocol, TypeAlias
 
 
 class Comparable(Protocol):
@@ -74,7 +74,7 @@ class Comparable(Protocol):
 
 SupportsRichComparisonT = TypeVar("SupportsRichComparisonT", bound=Comparable)
 
-Leg = tuple[Any, Any, float]
+Leg: TypeAlias = tuple[Any, Any, float]
 
 
 def group_sort(trip: Iterable[Leg]) -> dict[int, int]:

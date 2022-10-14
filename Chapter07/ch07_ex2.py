@@ -27,8 +27,9 @@ def test_pair() -> None:
 
 
 from collections.abc import Callable, Iterable
+from typing import TypeAlias
 
-RawPairIter = Iterable[tuple[float, float]]
+RawPairIter: TypeAlias = Iterable[tuple[float, float]]
 
 pairs: Callable[[RawPairIter], list[Pair]] = lambda source: list(
     Pair(*row) for row in source

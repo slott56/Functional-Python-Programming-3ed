@@ -53,7 +53,7 @@ def test_mapping() -> None:
         1073741824,
         2147483648,
     ]
-    transform: Callable[[int], int] = lambda x: cast(int, 2 ** x)
+    transform: Callable[[int], int] = lambda x: cast(int, 2**x)
     assert list(mapping1(transform, range(32))) == expected
     assert list(mapping2(transform, range(32))) == expected
 

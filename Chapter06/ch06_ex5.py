@@ -3,7 +3,7 @@
 Chapter 6, Example Set 5
 """
 from collections.abc import Iterable
-from typing import Any, TypeVar, Protocol
+from typing import Any, TypeVar, Protocol, TypeAlias
 
 
 class Comparable(Protocol):
@@ -16,7 +16,7 @@ class Comparable(Protocol):
 
 SupportsRichComparisonT = TypeVar("SupportsRichComparisonT", bound=Comparable)
 
-Leg = tuple[Any, Any, float]
+Leg: TypeAlias = tuple[Any, Any, float]
 
 
 def group_sort(trip: Iterable[Leg]) -> dict[int, int]:
