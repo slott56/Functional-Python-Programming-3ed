@@ -269,15 +269,15 @@ REPL_pairwise = """
 [('h', 'e'), ('e', 'l'), ('l', 'l'), ...]
 """
 
-from itertools import compress
+from itertools import compress, tee
 from collections.abc import Iterable, Iterator, Callable
-from typing import TypeVar
+from typing import Any, TypeVar
 
 SrcT = TypeVar("SrcT")
 
 
 def filter_concept(
-    function: Callable[[SrcT], bool], source: Iterable[SrcT]
+    function: Callable[[SrcT], Any], source: Iterable[SrcT]
 ) -> Iterator[SrcT]:
     i1, i2 = tee(source, 2)
     return compress(i1, map(function, i2))
