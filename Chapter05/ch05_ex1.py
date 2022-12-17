@@ -133,9 +133,7 @@ REPL_test_long_short_4 = """
 """
 
 start = lambda x: x[0]
-
 end = lambda x: x[1]
-
 dist = lambda x: x[2]
 
 REPL_test_long_short_5 = """
@@ -287,7 +285,8 @@ REPL_distance = """
 
 >>> data = "file:./Winter%202012-2013.kml"
 >>> with urllib.request.urlopen(data) as source:
-...     path_gen = floats_from_pair(float_lat_lon(row_iter_kml(source)))
+...     path_gen = floats_from_pair(
+...         float_lat_lon(row_iter_kml(source)))
 ...     path = list(path_gen)
 
 >>> distances_1 = map(
@@ -615,9 +614,9 @@ REPL_test_numbers_from_rows = '''
 ... """
 
 >>> data = list(
-...         v
-...         for line in text.splitlines()
-...             for v in line.split()
+...     v
+...     for line in text.splitlines()
+...         for v in line.split()
 ... )
 >>> data
 ['2', '3', '5', '7', '11', '13', '17', '19', '23', '29', '31', '37',...

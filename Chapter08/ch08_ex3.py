@@ -271,13 +271,13 @@ REPL_pairwise = """
 
 from itertools import compress, tee
 from collections.abc import Iterable, Iterator, Callable
-from typing import Any, TypeVar
+from typing import TypeVar
 
 SrcT = TypeVar("SrcT")
 
 
 def filter_concept(
-    function: Callable[[SrcT], Any], source: Iterable[SrcT]
+    function: Callable[[SrcT], bool], source: Iterable[SrcT]
 ) -> Iterator[SrcT]:
     i1, i2 = tee(source, 2)
     return compress(i1, map(function, i2))
@@ -483,7 +483,7 @@ REPL_test_get_trip = """
 >>> from pprint import pprint
 >>> source_url = "file:./Winter%202012-2013.kml"
 >>> trip = get_trip_starmap(source_url)
->>> len( trip )
+>>> len(trip)
 73
 >>> pprint(trip[0])
 LegNT(start=PointNT(latitude=37.54901619777347, longitude=-76.33029518659048), end=PointNT(latitude=37.840832, longitude=-76.273834), distance=17.724564798884984)
