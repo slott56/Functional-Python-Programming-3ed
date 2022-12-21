@@ -329,11 +329,12 @@ import yaml
 from flask import jsonify
 from flask.testing import FlaskClient
 from collections.abc import Iterator
+from os import environ
 
 
 @app.route("/openapi.json")
 def openapi_view() -> Response:
-    with (Path.cwd().parent / "Chapter15" / "openapi.yaml").open() as source:
+    with (Path(environ.get("CH15_OPENAPIPATH", ".")) / "openapi.yaml").open() as source:
         spec = yaml.load(source, Loader=yaml.SafeLoader)
     return jsonify(spec)
 
