@@ -333,9 +333,7 @@ from collections.abc import Iterator
 
 @app.route("/openapi.json")
 def openapi_view() -> Response:
-    with (
-        Path.cwd().parent / "templates" / "Chapter15" / "openapi.yaml"
-    ).open() as source:
+    with (Path.cwd().parent / "Chapter15" / "openapi.yaml").open() as source:
         spec = yaml.load(source, Loader=yaml.SafeLoader)
     return jsonify(spec)
 
